@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/rollFragment">
+
+    <fragment
+        android:id="@+id/rollFragment"
+        android:name="com.example.dicerollerproject.ui.RollFragment"
+        android:label="fragment_roll"
+        tools:layout="@layout/fragment_roll" />
+    <fragment
+        android:id="@+id/createFragment"
+        android:name="com.example.dicerollerproject.ui.CreateFragment"
+        android:label="fragment_create"
+        tools:layout="@layout/fragment_create" />
+    <fragment
+        android:id="@+id/simulateFragment"
+        android:name="com.example.dicerollerproject.ui.SimulateFragment"
+        android:label="fragment_simulate"
+        tools:layout="@layout/fragment_simulate" />
+</navigation>
