@@ -1,66 +1,112 @@
 package com.example.dicerollerproject.ui;
 
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
+import android.widget.*;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import com.example.dicerollerproject.R;
+import com.example.dicerollerproject.data.LocalStore;
+import com.example.dicerollerproject.data.model.CustomDie;
+import com.example.dicerollerproject.data.model.Rule;
+import com.example.dicerollerproject.domain.Dice;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link CreateFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
 public class CreateFragment extends Fragment {
-
-  // TODO: Rename parameter arguments, choose names that match
-  // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-  private static final String ARG_PARAM1 = "param1";
-  private static final String ARG_PARAM2 = "param2";
-
-  // TODO: Rename and change types of parameters
-  private String mParam1;
-  private String mParam2;
-
-  public CreateFragment() {
-    // Required empty public constructor
-  }
-
-  /**
-   * Use this factory method to create a new instance of
-   * this fragment using the provided parameters.
-   *
-   * @param param1 Parameter 1.
-   * @param param2 Parameter 2.
-   * @return A new instance of fragment CreateFragment.
-   */
-  // TODO: Rename and change types and number of parameters
-  public static CreateFragment newInstance(String param1, String param2) {
-    CreateFragment fragment = new CreateFragment();
-    Bundle args = new Bundle();
-    args.putString(ARG_PARAM1, param1);
-    args.putString(ARG_PARAM2, param2);
-    fragment.setArguments(args);
-    return fragment;
-  }
+  private LocalStore store;
+  private EditText editDieName, editDieFaces, editRuleName, editRuleDiceCount;
+  private Spinner spinnerRuleDice;
+  private List<CustomDie> currentDice;
 
   @Override
-  public void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    if (getArguments() != null) {
-      mParam1 = getArguments().getString(ARG_PARAM1);
-      mParam2 = getArguments().getString(ARG_PARAM2);
-    }
-  }
-
-  @Override
-  public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                           Bundle savedInstanceState) {
-    // Inflate the layout for this fragment
+  public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     return inflater.inflate(R.layout.fragment_create, container, false);
   }
+
+  @Override
+  public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+    store = new LocalStore(requireContext());
+    editDieName = view.findViewById(R.id.editDieName);
+    editDieFaces = view.findViewById(R.id.editDieFaces);
+    editRuleName = view.findViewById(R.id.editRuleName);
+    editRuleDiceCount = view.findViewById(R.id.editRuleDiceCount);
+    spinnerRuleDice = view.findViewById(R.id.spinnerRuleDice);
+
+    view.findViewById(R.id.btnSaveDie).setOnClickListener(v -> saveDie());
+    view.findViewById(R.id.btnSaveRule).setOnClickListener(v -> saveRule());
+
+    refreshDiceSpinner();
+  }
+
+  private void refreshDiceSpinner() {
+    currentDice = store.listCustomDice();
+    List<String> options = new ArrayList<>();
+    for (Dice.Standard s : Dice.Standard.values()) options.add(s.name());
+    for (CustomDie d : currentDice) options.add("Custom: " + d.name);
+
+    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, options);
+    spinnerRuleDice.setAdapter(adapter);
+  }
+
+  private void saveDie() {
+    String name = editDieName.getText().toString();
+    String[] facesArr = editDieFaces.getText().toString().split(",");
+    if (name.isEmpty() || facesArr.length == 0) return;
+
+    List<CustomDie> dice = store.listCustomDice();
+    dice.add(new CustomDie(UUID.randomUUID().toString(), name, Arrays.asList(facesArr)));
+    store.saveCustomDice(dice);
+    Toast.makeText(getContext(), "Die Saved", Toast.LENGTH_SHORT).show();
+    refreshDiceSpinner();
+  }
+
+  private void saveRule() {
+    String name = editRuleName.getText().toString();
+    String countStr = editRuleDiceCount.getText().toString();
+    if (name.isEmpty() || countStr.isEmpty()) {
+      Toast.makeText(getContext(), "Please enter name and count", Toast.LENGTH_SHORT).show();
+      return;
+    }
+
+    int count = Integer.parseInt(countStr);
+    String selected = spinnerRuleDice.getSelectedItem().toString();
+
+    Rule.RuleComponent comp;
+    if (selected.startsWith("Custom: ")) {
+      String dieName = selected.replace("Custom: ", "");
+      CustomDie found = null;
+      for (CustomDie d : currentDice) {
+        if (d.name.equals(dieName)) {
+          found = d;
+          break;
+        }
+      }
+      comp = new Rule.RuleComponent(false, null, found.id, count);
+    } else {
+      comp = new Rule.RuleComponent(true, selected, null, count);
+    }
+
+    Rule newRule = new Rule(
+        UUID.randomUUID().toString(),
+        name,
+        Collections.singletonList(comp),
+        new Rule.RuleModifier(null, null, false), // Default modifiers
+        0 // Default flat bonus
+    );
+
+    List<Rule> allRules = store.listRules();
+    allRules.add(newRule);
+    store.saveRules(allRules);
+
+    Toast.makeText(getContext(), "Rule Saved!", Toast.LENGTH_SHORT).show();
+  }
+
 }

@@ -1,14 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.CreateFragment">
+    tools:context=".ui.CreateFragment"
+    android:padding="16dp">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-</FrameLayout>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Create Custom Die" android:textSize="18sp" android:textStyle="bold"/>
+
+        <EditText android:id="@+id/editDieName" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:hint="Die Name (e.g., Elemental)"/>
+
+        <EditText android:id="@+id/editDieFaces" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:hint="Faces (comma separated: Fire,Ice,10)"/>
+
+        <Button android:id="@+id/btnSaveDie" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:text="Save Custom Die"/>
+
+        <View android:layout_width="match_parent" android:layout_height="2dp"
+            android:background="#CCCCCC" android:layout_marginVertical="16dp"/>
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Create Rule" android:textSize="18sp" android:textStyle="bold"/>
+
+        <EditText android:id="@+id/editRuleName" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:hint="Rule Name (e.g., Fireball)"/>
+
+        <Spinner android:id="@+id/spinnerRuleDice" android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <EditText android:id="@+id/editRuleDiceCount" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:hint="Number of Dice" android:inputType="number"/>
+
+        <Button android:id="@+id/btnSaveRule" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:text="Save Rule"/>
+
+    </LinearLayout>
+
+</ScrollView>
