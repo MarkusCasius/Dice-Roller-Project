@@ -33,13 +33,12 @@ import com.google.android.material.textfield.TextInputEditText;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 public class RollFragment extends Fragment {
 
   private DiceEngine diceEngine;
   private Spinner spinnerDice;
-  private TextInputEditText textInputEditText;
+  private EditText textInputEditText;
   private CheckBox checkBoxRerollOne;
   private RadioButton radioKeepHighest;
   private RadioButton radioKeepLowest;
@@ -50,6 +49,10 @@ public class RollFragment extends Fragment {
   private Spinner spinnerSavedRules;
   private LocalStore store;
   private List<Rule> savedRules;
+  private Button buttonAddDice;
+  private TextView textCurrentPool;
+  private List<RollSpec> manualPool = new ArrayList<>(); // Track manual dice added
+
 
   public RollFragment() {
     // Required empty public constructor
@@ -73,12 +76,14 @@ public class RollFragment extends Fragment {
     super.onViewCreated(view, savedInstanceState);
 
     // Find all the UI components by their ID
+    buttonAddDice = view.findViewById(R.id.buttonAddDice);
+    textCurrentPool = view.findViewById(R.id.textCurrentPool);
     spinnerDice = view.findViewById(R.id.spinnerDice);
-    textInputEditText = view.findViewById(R.id.textInputEditText);
+    textInputEditText = view.findViewById(R.id.editTextNoOfDice);
     checkBoxRerollOne = view.findViewById(R.id.checkBoxRerollOne);
     radioKeepHighest = view.findViewById(R.id.RadioKeepHighest);
     radioKeepLowest = view.findViewById(R.id.RadioKeepLowest);
-    editTextFlat = view.findViewById(R.id.editTextFlat);
+    editTextFlat = view.findViewById(R.id.editTextFlatMod);
     buttonRoll = view.findViewById(R.id.buttonRoll);
     buttonClear = view.findViewById(R.id.buttonClear);
     textView = view.findViewById(R.id.textView);
@@ -97,6 +102,23 @@ public class RollFragment extends Fragment {
     // Set an OnClickListener for the roll button
     buttonRoll.setOnClickListener(v -> rollDice());
     buttonClear.setOnClickListener(v -> clearInputs());
+    buttonAddDice.setOnClickListener(v -> addToPool());
+  }
+
+  private void addToPool() {
+    Dice.Standard selectedDie = (Dice.Standard) spinnerDice.getSelectedItem();
+    String numDiceStr = textInputEditText.getText().toString();
+    int numDice = numDiceStr.isEmpty() ? 1 : Integer.parseInt(numDiceStr);
+
+    // Add to our running list
+    manualPool.add(new RollSpec(Dice.standard(selectedDie), numDice));
+
+    // Update UI text
+    StringBuilder sb = new StringBuilder("Current Pool: ");
+    for (RollSpec spec : manualPool) {
+      sb.append(spec.count).append(spec.die.isStandard() ? "D" + spec.die.sides() : "Custom").append(" ");
+    }
+    textCurrentPool.setText(sb.toString());
   }
 
   private void refreshRules() {
@@ -129,39 +151,31 @@ public class RollFragment extends Fragment {
     } else {
       // --- MANUAL ROLL SELECTED ---
       // Get the selected die type from the spinner
-      Dice.Standard selectedDie = (Dice.Standard) spinnerDice.getSelectedItem();
+      List<RollSpec> diceToRoll = new ArrayList<>(manualPool);
+      if (diceToRoll.isEmpty()) {
+        Dice.Standard selectedDie = (Dice.Standard) spinnerDice.getSelectedItem();
+        int numDice = textInputEditText.getText().toString().isEmpty() ? 1 : Integer.parseInt(textInputEditText.getText().toString());
+        diceToRoll.add(new RollSpec(Dice.standard(selectedDie), numDice));
+      }
 
-      // Get the number of dice to roll, defaulting to 1 if empty
-      String numDiceStr = textInputEditText.getText().toString();
-      int numDice = numDiceStr.isEmpty() ? 1 : Integer.parseInt(numDiceStr);
+      int totalDiceInPool = 0;
+      for(RollSpec s : diceToRoll) totalDiceInPool += s.count;
 
-      // Create the RollSpec based on the die type and count
-      RollSpec spec = new RollSpec(Dice.standard(selectedDie), numDice);
-
-      // Get the flat modifier, defaulting to 0 if empty
       String flatModStr = editTextFlat.getText().toString();
       int flatMod = flatModStr.isEmpty() ? 0 : Integer.parseInt(flatModStr);
 
-      // Check the reroll and keep/drop options
-      boolean rerollOnes = checkBoxRerollOne.isChecked();
-      Integer keepHigh = null;
-      Integer keepLow = null;
-      if (radioKeepHighest.isChecked()) {
-        keepHigh = numDice > 1 ? numDice - 1 : 1; // Example: Keep all but one
-      } else if (radioKeepLowest.isChecked()) {
-        keepLow = numDice > 1 ? numDice - 1 : 1;
-      }
-
-
-      // Create the Modifier object
       Modifier modifier = Modifier.none();
       modifier.flat = flatMod;
-      modifier.rerollOnesOnce = rerollOnes;
-      modifier.keepHighest = keepHigh;
-      modifier.keepLowest = keepLow;
+      modifier.rerollOnesOnce = checkBoxRerollOne.isChecked();
+
+      if (radioKeepHighest.isChecked()) {
+        modifier.keepHighest = Math.max(1, totalDiceInPool - 1);
+      } else if (radioKeepLowest.isChecked()) {
+        modifier.keepLowest = Math.max(1, totalDiceInPool - 1);
+      }
 
       // Call the DiceEngine to get the result
-      result = diceEngine.roll(Collections.singletonList(spec), modifier);
+      result = diceEngine.roll(diceToRoll, modifier);
     }
 
     // Display result in the TextView
@@ -177,5 +191,7 @@ public class RollFragment extends Fragment {
     spinnerDice.setSelection(0); // Reset spinner to the first item
     spinnerSavedRules.setSelection(0);
     textView.setText("Roll Output"); // Reset the output text
+    manualPool.clear();
+    textCurrentPool.setText("Current Pool: Empty");
   }
 }
