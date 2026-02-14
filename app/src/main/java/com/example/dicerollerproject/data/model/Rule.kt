@@ -1,36 +1,14 @@
-package com.example.dicerollerproject.data.model;
+package com.example.dicerollerproject.data.model
 
-import java.util.List;
+class Rule(
+    var id: String?, var name: String?, // die ref + count
+    var components: MutableList<RuleComponent?>?, var modifier: RuleModifier?, var flat: Int
+) {
+    class RuleComponent(
+        var isStandard: Boolean, // "D4"..."D20" if standard
+        var standard: String?, // if custom
+        var customDieId: String?, var count: Int
+    )
 
-public class Rule {
-  public String id;
-  public String name;
-  public List<RuleComponent> components; // die ref + count
-  public RuleModifier modifier;
-  public int flat;
-
-  public Rule(String id, String name, List<RuleComponent> components, RuleModifier modifier, int flat){
-    this.id = id; this.name = name; this.components = components; this.modifier = modifier; this.flat = flat;
-  }
-
-  public static class RuleComponent {
-    public boolean isStandard;
-    public String standard; // "D4"..."D20" if standard
-    public String customDieId; // if custom
-    public int count;
-
-    public RuleComponent(boolean isStandard, String standard, String customDieId, int count){
-      this.isStandard = isStandard; this.standard = standard; this.customDieId = customDieId; this.count = count;
-    }
-  }
-
-  public static class RuleModifier {
-    public Integer keepHighest;
-    public Integer keepLowest;
-    public boolean rerollOnesOnce;
-
-    public RuleModifier(Integer keepHighest, Integer keepLowest, boolean rerollOnesOnce){
-      this.keepHighest = keepHighest; this.keepLowest = keepLowest; this.rerollOnesOnce = rerollOnesOnce;
-    }
-  }
+    class RuleModifier(var keepHighest: Int?, var keepLowest: Int?, var rerollOnesOnce: Boolean)
 }

@@ -1,46 +1,46 @@
-package com.example.dicerollerproject.data;
+package com.example.dicerollerproject.data
 
-import com.example.dicerollerproject.data.*;
-import com.example.dicerollerproject.data.model.*;
-import com.example.dicerollerproject.domain.Dice;
-import com.example.dicerollerproject.domain.Modifier;
-import com.example.dicerollerproject.domain.RollSpec;
+import com.example.dicerollerproject.data.model.CustomDie
+import com.example.dicerollerproject.data.model.Rule
+import com.example.dicerollerproject.domain.Dice
+import com.example.dicerollerproject.domain.Modifier
+import com.example.dicerollerproject.domain.RollSpec
 
-import java.util.*;
+object RuleMapper {
+    fun prepare(rule: Rule?, allDice: MutableList<CustomDie?>?): Prepared {
+        val specs = mutableListOf<RollSpec>()
 
-public class RuleMapper {
+        rule?.components?.filterNotNull()?.forEach { c ->
+            val die: Dice = if (c.isStandard) {
+                // c.standard is a String? (e.g. "D6"), valueOf converts string to Enum
+                Dice.standard(Dice.Standard.valueOf(c.standard!!))
+            } else {
+                val cd = findById(allDice.orEmpty(), c.customDieId)
+                Dice.custom(cd.faces)
+            }
+            specs.add(RollSpec(die, c.count))
+        }
 
-  public static class Prepared {
-    public final List<RollSpec> specs;
-    public final Modifier mod;
-    public Prepared(List<RollSpec> specs, Modifier mod){ this.specs = specs; this.mod = mod; }
-  }
-
-  public static Prepared prepare(Rule rule, List<CustomDie> allDice) {
-    List<RollSpec> specs = new ArrayList<>();
-    for (Rule.RuleComponent c : rule.components) {
-      Dice die;
-      if (c.isStandard) {
-        die = Dice.standard(Dice.Standard.valueOf(c.standard)); // "D6" etc.
-      } else {
-        CustomDie cd = findById(allDice, c.customDieId);
-        die = Dice.custom(cd.faces);
-      }
-      specs.add(new RollSpec(die, c.count));
+        val m = Modifier.none().apply {
+            flat = rule?.flat ?: 0
+            rule?.modifier?.let { mod ->
+                keepHighest = mod.keepHighest
+                keepLowest = mod.keepLowest
+                rerollOnesOnce = mod.rerollOnesOnce
+            }
+        }
+        return Prepared(specs, m)
     }
-    Modifier m = new Modifier();
-    m.flat = rule.flat;
-    if (rule.modifier != null) {
-      m.keepHighest = rule.modifier.keepHighest;
-      m.keepLowest  = rule.modifier.keepLowest;
-      m.rerollOnesOnce = rule.modifier.rerollOnesOnce;
-    }
-    return new Prepared(specs, m);
-  }
 
-  private static CustomDie findById(List<CustomDie> dice, String id) {
-    for (CustomDie d : dice) if (d.id.equals(id)) return d;
-    throw new IllegalArgumentException("Custom die not found: " + id);
-  }
+    private fun findById(dice: List<CustomDie?>, id: String?): CustomDie {
+        return dice.filterNotNull().find { it.id == id }
+            ?: throw IllegalArgumentException("Custom die not found: $id")
+    }
+
+    class Prepared(val specs: MutableList<RollSpec>, val mod: Modifier)
+}
+
+private fun Unit.valueOf(value: String?): Dice.Standard? {
+    return TODO("Provide the return value")
 }
 

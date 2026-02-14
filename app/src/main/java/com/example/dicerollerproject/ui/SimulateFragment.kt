@@ -1,169 +1,182 @@
-package com.example.dicerollerproject.ui;
+package com.example.dicerollerproject.ui
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.*;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import com.example.dicerollerproject.R;
-import com.example.dicerollerproject.data.LocalStore;
-import com.example.dicerollerproject.data.RuleMapper;
-import com.example.dicerollerproject.data.model.CustomDie;
-import com.example.dicerollerproject.data.model.Rule;
-import com.example.dicerollerproject.domain.DiceEngine;
-import com.example.dicerollerproject.domain.RollResult;
-import java.util.*;
+import android.os.Bundle
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.Spinner
+import android.widget.TextView
+import androidx.fragment.app.Fragment
+import com.example.dicerollerproject.R
+import com.example.dicerollerproject.data.LocalStore
+import com.example.dicerollerproject.data.RuleMapper
+import com.example.dicerollerproject.data.model.Rule
+import com.example.dicerollerproject.domain.DiceEngine
+import java.util.Locale
+import java.util.TreeMap
+import kotlin.math.max
+import kotlin.math.min
 
 /**
- * A simple {@link Fragment} subclass.
+ * A simple [Fragment] subclass.
  * create an instance of this fragment.
  */
-public class SimulateFragment extends Fragment {
+class SimulateFragment : Fragment() {
+    private var store: LocalStore? = null
+    private var engine: DiceEngine? = null
+    private var spinnerRules: Spinner? = null
+    private var editTrials: EditText? = null
+    private var progressBar: ProgressBar? = null
+    private var textResults: TextView? = null
+    private var layoutHistogram: LinearLayout? = null
+    private var savedRules: MutableList<Rule>? = null
 
-  private LocalStore store;
-  private DiceEngine engine;
-  private Spinner spinnerRules;
-  private EditText editTrials;
-  private ProgressBar progressBar;
-  private TextView textResults;
-  private LinearLayout layoutHistogram;
-  private List<Rule> savedRules;
-
-  @Override
-  public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-    return inflater.inflate(R.layout.fragment_simulate, container, false);
-  }
-
-  @Override
-  public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-    store = new LocalStore(requireContext());
-    engine = new DiceEngine(null);
-
-    spinnerRules = view.findViewById(R.id.spinnerSimulateRule);
-    editTrials = view.findViewById(R.id.editTrials);
-    progressBar = view.findViewById(R.id.progressSimulation);
-    textResults = view.findViewById(R.id.textSimResults);
-    layoutHistogram = view.findViewById(R.id.layoutHistogram);
-
-    refreshRuleSpinner();
-
-    view.findViewById(R.id.btnRunSimulation).setOnClickListener(v -> runSimulation());
-  }
-
-  private void refreshRuleSpinner() {
-    savedRules = store.listRules();
-    List<String> names = new ArrayList<>();
-    for (Rule r : savedRules) names.add(r.name);
-
-    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
-        android.R.layout.simple_spinner_item, names);
-    spinnerRules.setAdapter(adapter);
-  }
-
-  private void runSimulation() {
-    if (savedRules.isEmpty()) return;
-
-    Rule selectedRule = savedRules.get(spinnerRules.getSelectedItemPosition());
-    List<CustomDie> allDice = store.listCustomDice();
-    RuleMapper.Prepared prepared = RuleMapper.prepare(selectedRule, allDice);
-
-    int trials;
-    try {
-      trials = Integer.parseInt(editTrials.getText().toString());
-    } catch (NumberFormatException e) {
-      trials = 1000;
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_simulate, container, false)
     }
 
-    progressBar.setVisibility(View.VISIBLE);
-    progressBar.setMax(trials);
-    progressBar.setProgress(0);
-    layoutHistogram.removeAllViews();
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        store = LocalStore(requireContext())
+        engine = DiceEngine(null)
 
-    final int finalTrials = trials;
+        spinnerRules = view.findViewById<Spinner>(R.id.spinnerSimulateRule)
+        editTrials = view.findViewById<EditText>(R.id.editTrials)
+        progressBar = view.findViewById<ProgressBar>(R.id.progressSimulation)
+        textResults = view.findViewById<TextView>(R.id.textSimResults)
+        layoutHistogram = view.findViewById<LinearLayout>(R.id.layoutHistogram)
 
-    // Run on a background thread to keep UI smooth
-    new Thread(() -> {
-      Map<Integer, Integer> frequencyMap = new TreeMap<>();
-      long totalSum = 0;
-      int min = Integer.MAX_VALUE;
-      int max = Integer.MIN_VALUE;
+        refreshRuleSpinner()
 
-      for (int i = 0; i < finalTrials; i++) {
-        RollResult res = engine.roll(prepared.specs, prepared.mod);
-        int val = res.total;
-
-        totalSum += val;
-        min = Math.min(min, val);
-        max = Math.max(max, val);
-        frequencyMap.put(val, frequencyMap.getOrDefault(val, 0) + 1);
-
-        if (i % 100 == 0) { // Update progress periodically
-          int currentI = i;
-          if (getActivity() != null)
-            getActivity().runOnUiThread(() -> progressBar.setProgress(currentI));
-        }
-      }
-
-      // Calculations
-      double mean = (double) totalSum / finalTrials;
-      int mode = -1;
-      int maxFreq = -1;
-      for (Map.Entry<Integer, Integer> entry : frequencyMap.entrySet()) {
-        if (entry.getValue() > maxFreq) {
-          maxFreq = entry.getValue();
-          mode = entry.getKey();
-        }
-      }
-
-      // Display Results
-      String stats = String.format(Locale.getDefault(),
-          "Mean: %.2f\nMode: %d\nMin: %d\nMax: %d\nTrials: %d",
-          mean, mode, min, max, finalTrials);
-
-      int finalMin = min;
-      int finalMax = max;
-      int finalMaxFreq = maxFreq;
-
-      if (getActivity() != null) {
-        getActivity().runOnUiThread(() -> {
-          progressBar.setVisibility(View.GONE);
-          textResults.setText(stats);
-          drawHistogram(frequencyMap, finalMaxFreq);
-        });
-      }
-    }).start();
-  }
-
-  private void drawHistogram(Map<Integer, Integer> data, int maxFreq) {
-    for (Map.Entry<Integer, Integer> entry : data.entrySet()) {
-      // Create a bar (View)
-      LinearLayout barContainer = new LinearLayout(requireContext());
-      barContainer.setOrientation(LinearLayout.VERTICAL);
-      barContainer.setGravity(android.view.Gravity.BOTTOM | android.view.Gravity.CENTER_HORIZONTAL);
-
-      View bar = new View(requireContext());
-      int heightPx = (int) (((double) entry.getValue() / maxFreq) * 400); // 400px max height
-      // Calculate height as percentage of max frequency
-      LinearLayout.LayoutParams barParams = new LinearLayout.LayoutParams(50, heightPx);
-      barParams.setMargins(6, 0, 6, 0);
-      bar.setLayoutParams(barParams);
-      bar.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_dark));
-
-      TextView valLabel = new TextView(requireContext());
-      valLabel.setText(String.valueOf(entry.getKey()));
-      valLabel.setTextSize(10f);
-      valLabel.setGravity(android.view.Gravity.CENTER);
-
-      barContainer.addView(bar);
-      barContainer.addView(valLabel);
-
-      bar.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_dark));
-
-      // Tooltip or label could be added here
-      layoutHistogram.addView(barContainer);
+        view.findViewById<View?>(R.id.btnRunSimulation)
+            .setOnClickListener(View.OnClickListener { v: View? -> runSimulation() })
     }
-  }
+
+    private fun refreshRuleSpinner() {
+        savedRules = store!!.listRules()
+        val names: MutableList<String?> = ArrayList<String?>()
+        for (r in savedRules!!) names.add(r.name)
+
+        val adapter = ArrayAdapter<String?>(
+            requireContext(),
+            android.R.layout.simple_spinner_item, names
+        )
+        spinnerRules!!.setAdapter(adapter)
+    }
+
+    private fun runSimulation() {
+        if (savedRules!!.isEmpty()) return
+
+        val selectedRule = savedRules!!.get(spinnerRules!!.getSelectedItemPosition())
+        val allDice = store!!.listCustomDice()
+        val prepared = RuleMapper.prepare(selectedRule, allDice)
+
+        var trials: Int
+        try {
+            trials = editTrials!!.getText().toString().toInt()
+        } catch (e: NumberFormatException) {
+            trials = 1000
+        }
+
+        progressBar!!.setVisibility(View.VISIBLE)
+        progressBar!!.setMax(trials)
+        progressBar!!.setProgress(0)
+        layoutHistogram!!.removeAllViews()
+
+        val finalTrials = trials
+
+        // Run on a background thread to keep UI smooth
+        Thread(Runnable {
+            val frequencyMap: MutableMap<Int?, Int?> = TreeMap<Int?, Int?>()
+            var totalSum: Long = 0
+            var min = Int.Companion.MAX_VALUE
+            var max = Int.Companion.MIN_VALUE
+
+            for (i in 0..<finalTrials) {
+                val res = engine!!.roll(prepared.specs, prepared.mod)
+                val `val` = res.total
+
+                totalSum += `val`.toLong()
+                min = min(min, `val`)
+                max = max(max, `val`)
+                frequencyMap.put(`val`, frequencyMap.getOrDefault(`val`, 0)!! + 1)
+
+                if (i % 100 == 0) { // Update progress periodically
+                    val currentI = i
+                    if (getActivity() != null) getActivity()!!.runOnUiThread(Runnable {
+                        progressBar!!.setProgress(
+                            currentI
+                        )
+                    })
+                }
+            }
+
+            // Calculations
+            val mean = totalSum.toDouble() / finalTrials
+            var mode = -1
+            var maxFreq = -1
+            for (entry in frequencyMap.entries) {
+                if (entry.value!! > maxFreq) {
+                    maxFreq = entry.value!!
+                    mode = entry.key!!
+                }
+            }
+
+            // Display Results
+            val stats = String.format(
+                Locale.getDefault(),
+                "Mean: %.2f\nMode: %d\nMin: %d\nMax: %d\nTrials: %d",
+                mean, mode, min, max, finalTrials
+            )
+
+            val finalMin = min
+            val finalMax = max
+            val finalMaxFreq = maxFreq
+            if (getActivity() != null) {
+                getActivity()!!.runOnUiThread(Runnable {
+                    progressBar!!.setVisibility(View.GONE)
+                    textResults!!.setText(stats)
+                    drawHistogram(frequencyMap, finalMaxFreq)
+                })
+            }
+        }).start()
+    }
+
+    private fun drawHistogram(data: MutableMap<Int?, Int?>, maxFreq: Int) {
+        for (entry in data.entries) {
+            // Create a bar (View)
+            val barContainer = LinearLayout(requireContext())
+            barContainer.setOrientation(LinearLayout.VERTICAL)
+            barContainer.setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL)
+
+            val bar = View(requireContext())
+            val heightPx = ((entry.value!!.toDouble() / maxFreq) * 400).toInt() // 400px max height
+            // Calculate height as percentage of max frequency
+            val barParams = LinearLayout.LayoutParams(50, heightPx)
+            barParams.setMargins(6, 0, 6, 0)
+            bar.setLayoutParams(barParams)
+            bar.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_dark))
+
+            val valLabel = TextView(requireContext())
+            valLabel.setText(entry.key.toString())
+            valLabel.setTextSize(10f)
+            valLabel.setGravity(Gravity.CENTER)
+
+            barContainer.addView(bar)
+            barContainer.addView(valLabel)
+
+            bar.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_dark))
+
+            // Tooltip or label could be added here
+            layoutHistogram!!.addView(barContainer)
+        }
+    }
 }
