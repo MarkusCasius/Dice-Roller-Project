@@ -8,9 +8,13 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.Spinner
 import android.widget.TextView
+import androidx.core.view.children
+import androidx.core.view.forEach
 import androidx.fragment.app.Fragment
 import com.example.dicerollerproject.R
 import com.example.dicerollerproject.data.LocalStore
@@ -57,8 +61,6 @@ class RollFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Find all the UI components by their ID
-        spinnerDice = view.findViewById<Spinner>(R.id.spinnerDice)
-        textInputEditText = view.findViewById<TextInputEditText>(R.id.textInputEditText)
         checkBoxRerollOne = view.findViewById<CheckBox>(R.id.checkBoxRerollOne)
         radioKeepHighest = view.findViewById<RadioButton>(R.id.RadioKeepHighest)
         radioKeepLowest = view.findViewById<RadioButton>(R.id.RadioKeepLowest)
@@ -68,6 +70,11 @@ class RollFragment : Fragment() {
         textView = view.findViewById<TextView>(R.id.textView)
         spinnerSavedRules = view.findViewById<Spinner>(R.id.spinnerSavedRules)
         store = LocalStore(requireContext())
+
+        val btnAdd = view.findViewById<Button>(R.id.btnAddDiceRow)
+        btnAdd.setOnClickListener {
+            addDiceRow()
+        }
 
         // Set up the Spinners with standard dice types
         // An ArrayAdapter is used to adapt the Dice.Standard enum values to be displayed in the Spinner
@@ -97,12 +104,36 @@ class RollFragment : Fragment() {
 //            ruleNames.add(r.name)
 //        }
 
-        val adapter = ArrayAdapter<String?>(
+        val adapter = ArrayAdapter<String>(
             requireContext(),
             android.R.layout.simple_spinner_item, ruleNames
         )
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerSavedRules?.adapter = adapter
+    }
+
+    private fun addDiceRow(dieType: String? = null, count: Int = 1) {
+        val container = view?.findViewById<LinearLayout>(R.id.layoutDiceContainer) ?: return
+        val row = layoutInflater.inflate(R.layout.item_dice_row, container, false)
+
+        val spinner = row.findViewById<Spinner>(R.id.spinnerDiceRow)
+        val countEdit = row.findViewById<EditText>(R.id.editDiceCountRow)
+        val btnRemove = row.findViewById<ImageButton>(R.id.btnRemoveRow)
+        val options = mutableListOf<String>()
+
+        Dice.Standard.entries.forEach { options.add(it.name) }
+
+        val customDice = store.listCustomDice()
+        customDice.filterNotNull().forEach { options.add("Custom: ${it.name}") }
+
+
+        // Set adapter for spinner (Standard Dice)
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, options)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinner.adapter = adapter
+
+        btnRemove.setOnClickListener { container.removeView(row) }
+        container.addView(row)
     }
 
     private fun rollDice() {
@@ -119,14 +150,32 @@ class RollFragment : Fragment() {
         } else {
             // --- MANUAL ROLL SELECTED ---
             // Get the selected die type from the spinner
-            val selectedDie = spinnerDice!!.getSelectedItem() as Dice.Standard?
+            val specs = mutableListOf<RollSpec>()
+            val container = view?.findViewById<LinearLayout>(R.id.layoutDiceContainer)
+
+            container?.children?.forEach { row ->
+                val spinner = row.findViewById<Spinner>(R.id.spinnerDiceRow)
+                val qty = row.findViewById<EditText>(R.id.editDiceCountRow).text.toString().toIntOrNull() ?: 1
+                val selectedString = spinner.selectedItem.toString()
+
+                val die: Dice = if (selectedString.startsWith("Custom: ")) {
+                    val dieName = selectedString.replace("Custom: ", "")
+                    val customDie = store.listCustomDice().find { it?.name == dieName }
+                    Dice.custom(customDie?.faces?.toMutableList() ?: mutableListOf())
+                } else {
+                    Dice.standard(Dice.Standard.valueOf(selectedString))
+                }
+
+                specs.add(RollSpec(die, qty))
+            }
+
 
             // Get the number of dice to roll, defaulting to 1 if empty
             val numDiceStr = textInputEditText!!.getText().toString()
             val numDice = if (numDiceStr.isEmpty()) 1 else numDiceStr.toInt()
 
             // Create the RollSpec based on the die type and count
-            val spec = RollSpec(Dice.Companion.standard(selectedDie), numDice)
+            // val spec = RollSpec(Dice.Companion.standard(selectedDie), numDice)
 
             // Get the flat modifier, defaulting to 0 if empty
             val flatModStr = editTextFlat!!.getText().toString()
@@ -151,7 +200,7 @@ class RollFragment : Fragment() {
             modifier.keepLowest = keepLow
 
             // Call the DiceEngine to get the result
-            diceEngine!!.roll(mutableListOf<RollSpec>(spec), modifier)
+            diceEngine.roll(specs, modifier)
         }
 
         // Display result in the TextView

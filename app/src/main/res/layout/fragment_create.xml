@@ -1,46 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.CreateFragment"
-    android:padding="16dp">
+    android:fitsSystemWindows="true"
+    android:padding="16dp"
+    tools:context=".ui.CreateFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Create Custom Die" android:textSize="18sp" android:textStyle="bold"/>
+        <!-- SECTION: CUSTOM DICE -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Create Custom Die"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
-        <EditText android:id="@+id/editDieName" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:hint="Die Name (e.g., Elemental)"/>
+        <EditText
+            android:id="@+id/editDieName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Die Name (e.g., Elemental)" />
 
-        <EditText android:id="@+id/editDieFaces" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:hint="Faces (comma separated: Fire,Ice,10)"/>
+        <EditText
+            android:id="@+id/editDieFaces"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Faces (comma separated: Fire,Ice,10)" />
 
-        <Button android:id="@+id/btnSaveDie" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:text="Save Custom Die"/>
+        <Button
+            android:id="@+id/btnSaveDie"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save Custom Die" />
 
-        <View android:layout_width="match_parent" android:layout_height="2dp"
-            android:background="#CCCCCC" android:layout_marginVertical="16dp"/>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_marginVertical="24dp"
+            android:background="#CCCCCC" />
 
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Create Rule" android:textSize="18sp" android:textStyle="bold"/>
+        <!-- SECTION: RULES -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Create Rule"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
-        <EditText android:id="@+id/editRuleName" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:hint="Rule Name (e.g., Fireball)"/>
+        <EditText
+            android:id="@+id/editRuleName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Rule Name (e.g., Fireball)" />
 
-        <Spinner android:id="@+id/spinnerRuleDice" android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Dice in Rule:"
+            android:textStyle="italic" />
 
-        <EditText android:id="@+id/editRuleDiceCount" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:hint="Number of Dice" android:inputType="number"/>
+        <!-- Dynamic Container for multi-dice rows -->
+        <LinearLayout
+            android:id="@+id/ruleDiceContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingVertical="8dp" />
 
-        <Button android:id="@+id/btnSaveRule" android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:text="Save Rule"/>
+        <Button
+            android:id="@+id/btnAddDiceToRule"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="+ Add Dice to Rule" />
+
+        <Button
+            android:id="@+id/btnSaveRule"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Save Complete Rule" />
 
     </LinearLayout>
-
 </ScrollView>

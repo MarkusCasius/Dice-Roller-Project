@@ -4,135 +4,114 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context=".ui.RollFragment">
 
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/fragment_roll"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Spinner
-        android:id="@+id/spinnerDice"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="8dp"
-        app:layout_constraintBottom_toBottomOf="@+id/fragment_roll"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/fragment_roll" />
-
-    <com.google.android.material.textfield.TextInputEditText
-        android:id="@+id/textInputEditText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Number of Dice"
-        android:inputType="numberSigned"
-        app:layout_constraintBottom_toTopOf="@+id/spinnerDice"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/fragment_roll"
-        app:layout_constraintVertical_bias="1.0" />
-
-    <Button
-        android:id="@+id/buttonRoll"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Roll"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.3"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/spinnerSavedRules"
-        app:layout_constraintVertical_bias="0.100000024" />
-
+    <!-- Output Area -->
     <TextView
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:text="Roll Output"
         android:textSize="20sp"
-        app:layout_constraintBottom_toTopOf="@+id/textInputEditText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/fragment_roll" />
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <CheckBox
-        android:id="@+id/checkBoxRerollOne"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Reroll Ones"
-        app:layout_constraintBottom_toTopOf="@+id/textInputEditText"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/fragment_roll"
-        app:layout_constraintVertical_bias="1.0" />
-
-    <RadioGroup
-        android:id="@+id/RadioKeepDice"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@+id/textInputEditText"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/checkBoxRerollOne"
-        app:layout_constraintTop_toTopOf="@+id/fragment_roll"
-        app:layout_constraintVertical_bias="1.0">
-
-        <RadioButton
-            android:id="@+id/RadioKeepHighest"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Drop Lowest" />
-
-        <RadioButton
-            android:id="@+id/RadioKeepLowest"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Drop Highest" />
-
-    </RadioGroup>
-
-    <EditText
-        android:id="@+id/editTextFlat"
+    <!-- Scrollable container for dynamic dice rows -->
+    <ScrollView
+        android:id="@+id/scrollDice"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="Number Modifier"
-        android:inputType="numberSigned"
-        app:layout_constraintBottom_toTopOf="@+id/textInputEditText"
+        android:layout_height="0dp"
+        android:layout_marginVertical="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/divider"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/RadioKeepDice"
-        app:layout_constraintTop_toTopOf="@+id/fragment_roll"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView">
+
+        <LinearLayout
+            android:id="@+id/layoutDiceContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="8dp" />
+    </ScrollView>
 
     <Button
-        android:id="@+id/buttonClear"
+        android:id="@+id/btnAddDiceRow"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Clear"
-        app:layout_constraintBottom_toBottomOf="@+id/fragment_roll"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.7"
+        android:text="+ Add Dice Type"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/spinnerSavedRules"
-        app:layout_constraintVertical_bias="0.100000024" />
+        app:layout_constraintTop_toBottomOf="@id/scrollDice"
+        app:layout_constraintBottom_toTopOf="@id/divider"/>
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider"
+        app:layout_constraintBottom_toTopOf="@+id/modifierGrid" />
+
+    <!-- Manual Modifiers Area -->
+    <GridLayout
+        android:id="@+id/modifierGrid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:padding="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/spinnerSavedRules">
+
+        <CheckBox
+            android:id="@+id/checkBoxRerollOne"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Reroll Ones" />
+
+        <EditText
+            android:id="@+id/editTextFlat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="Flat Mod"
+            android:inputType="numberSigned" />
+
+        <RadioGroup
+            android:id="@+id/RadioKeepDice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <RadioButton android:id="@+id/RadioKeepHighest" android:text="Drop Lowest"  android:layout_height="match_parent" android:layout_width="match_parent"/>
+            <RadioButton android:id="@+id/RadioKeepLowest" android:text="Drop Highest"  android:layout_height="match_parent" android:layout_width="match_parent"/>
+        </RadioGroup>
+    </GridLayout>
 
     <Spinner
         android:id="@+id/spinnerSavedRules"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/buttonRoll" />
+
+    <Button
+        android:id="@+id/buttonRoll"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="Roll"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/buttonClear"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/buttonClear"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:text="Clear"
+        app:layout_constraintBottom_toBottomOf="@+id/buttonRoll"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/spinnerDice"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintStart_toEndOf="@+id/buttonRoll" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
