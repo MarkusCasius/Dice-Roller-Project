@@ -23,7 +23,7 @@ class LocalStore(context: Context) {
     /**
      * Saves the list of custom dice to local storage.
      */
-    fun saveCustomDice(dice: MutableList<CustomDie?>?) {
+    fun saveCustomDice(dice: MutableList<CustomDie?>) {
         val json = gson.toJson(dice)
         prefs.edit().putString(KEY_CUSTOM_DICE, json).apply()
     }
@@ -32,17 +32,17 @@ class LocalStore(context: Context) {
      * Retrieves the list of custom dice from local storage.
      * Returns an empty list if nothing is saved.
      */
-    fun listCustomDice(): MutableList<CustomDie?>? {
+    fun listCustomDice(): MutableList<CustomDie?> {
         val json = prefs.getString(KEY_CUSTOM_DICE, null)
         if (json == null || json.isEmpty()) return ArrayList<CustomDie?>()
         val type = object : TypeToken<MutableList<CustomDie?>?>() {}.getType()
-        return gson.fromJson<MutableList<CustomDie?>?>(json, type)
+        return gson.fromJson<MutableList<CustomDie?>>(json, type)
     }
 
     /**
      * Saves custom rules (Modifiers) to local storage.
      */
-    fun saveRules(rules: MutableList<Rule?>?) {
+    fun saveRules(rules: MutableList<Rule?>) {
         val json = gson.toJson(rules)
         prefs.edit().putString(KEY_CUSTOM_RULES, json).apply()
     }
@@ -50,11 +50,11 @@ class LocalStore(context: Context) {
     /**
      * Retrieves the list of custom rules from local storage.
      */
-    fun listRules(): MutableList<Rule?>? {
+    fun listRules(): MutableList<Rule?> {
         val json = prefs.getString(KEY_CUSTOM_RULES, null)
         if (json == null || json.isEmpty()) return ArrayList<Rule?>()
         val type = object : TypeToken<MutableList<Rule?>?>() {}.getType()
-        return gson.fromJson<MutableList<Rule?>?>(json, type)
+        return gson.fromJson<MutableList<Rule?>>(json, type)
     }
 
     /**

@@ -34,7 +34,7 @@ class SimulateFragment : Fragment() {
     private var progressBar: ProgressBar? = null
     private var textResults: TextView? = null
     private var layoutHistogram: LinearLayout? = null
-    private var savedRules: MutableList<Rule>? = null
+    private var savedRules: MutableList<Rule?> = mutableListOf()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -63,7 +63,7 @@ class SimulateFragment : Fragment() {
     private fun refreshRuleSpinner() {
         savedRules = store!!.listRules()
         val names: MutableList<String?> = ArrayList<String?>()
-        for (r in savedRules!!) names.add(r.name)
+        for (r in savedRules!!) names.add(r?.name)
 
         val adapter = ArrayAdapter<String?>(
             requireContext(),
@@ -111,7 +111,7 @@ class SimulateFragment : Fragment() {
 
                 if (i % 100 == 0) { // Update progress periodically
                     val currentI = i
-                    if (getActivity() != null) getActivity()!!.runOnUiThread(Runnable {
+                    if (getActivity() != null) requireActivity().runOnUiThread(Runnable {
                         progressBar!!.setProgress(
                             currentI
                         )
@@ -141,7 +141,7 @@ class SimulateFragment : Fragment() {
             val finalMax = max
             val finalMaxFreq = maxFreq
             if (getActivity() != null) {
-                getActivity()!!.runOnUiThread(Runnable {
+                requireActivity().runOnUiThread(Runnable {
                     progressBar!!.setVisibility(View.GONE)
                     textResults!!.setText(stats)
                     drawHistogram(frequencyMap, finalMaxFreq)
