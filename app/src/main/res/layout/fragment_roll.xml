@@ -7,6 +7,7 @@
     android:fitsSystemWindows="true"
     tools:context=".ui.RollFragment">
 
+
     <!-- Output Area -->
     <TextView
         android:id="@+id/textView"
@@ -37,6 +38,13 @@
             android:orientation="vertical"
             android:padding="8dp" />
     </ScrollView>
+
+    <FrameLayout
+        android:id="@+id/diceTrayContainer"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:elevation="10dp"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/btnAddDiceRow"

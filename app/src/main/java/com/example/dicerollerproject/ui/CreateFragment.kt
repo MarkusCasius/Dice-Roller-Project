@@ -62,7 +62,7 @@ class CreateFragment : Fragment() {
 
         val adapter =
             ArrayAdapter<String?>(requireContext(), android.R.layout.simple_spinner_item, options)
-        spinnerRuleDice!!.setAdapter(adapter)
+        spinnerRuleDice?.setAdapter(adapter)
     }
 
     private fun saveDie() {

@@ -13,6 +13,8 @@ import com.google.gson.reflect.TypeToken
 class LocalStore(context: Context) {
     private val prefs: SharedPreferences
     private val gson: Gson
+    private val keyElementColour = "element_color"
+
 
     init {
         // Initialize SharedPreferences in Private mode (only accessible by this app)
@@ -63,6 +65,12 @@ class LocalStore(context: Context) {
     fun clearAll() {
         prefs.edit().clear().apply()
     }
+
+    fun saveTextColor(color: Int) = prefs.edit().putInt(keyElementColour, color).apply()
+    fun getTextColor(): Int = prefs.getInt(keyElementColour, android.graphics.Color.BLACK)
+
+    fun saveElementColor(color: Int) = prefs.edit().putInt(keyElementColour, color).apply()
+    fun getElementColor(): Int = prefs.getInt(keyElementColour, android.graphics.Color.parseColor("#6200EE"))
 
     companion object {
         private const val PREF_NAME = "dice_store"

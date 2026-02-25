@@ -8,13 +8,14 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.core.view.children
-import androidx.core.view.forEach
 import androidx.fragment.app.Fragment
 import com.example.dicerollerproject.R
 import com.example.dicerollerproject.data.LocalStore
@@ -25,7 +26,6 @@ import com.example.dicerollerproject.domain.DiceEngine
 import com.example.dicerollerproject.domain.Modifier
 import com.example.dicerollerproject.domain.RollResult
 import com.example.dicerollerproject.domain.RollSpec
-import com.google.android.material.textfield.TextInputEditText
 
 class RollFragment : Fragment() {
     private lateinit var diceEngine: DiceEngine
@@ -33,7 +33,6 @@ class RollFragment : Fragment() {
 
     // UI Components
     private var spinnerDice: Spinner? = null
-    private var textInputEditText: TextInputEditText? = null
     private var checkBoxRerollOne: CheckBox? = null
     private var radioKeepHighest: RadioButton? = null
     private var radioKeepLowest: RadioButton? = null
@@ -42,6 +41,7 @@ class RollFragment : Fragment() {
     private var buttonClear: Button? = null
     private var textView: TextView? = null
     private var spinnerSavedRules: Spinner? = null
+    private var tray: ViewGroup? = null
     private var savedRules: MutableList<Rule?> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,6 +59,22 @@ class RollFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        store = LocalStore(requireContext())
+        val textColor = store.getTextColor()
+        val elementColor = store.getElementColor()
+
+        // Apply to Text
+        view.findViewById<TextView>(R.id.textView).setTextColor(textColor)
+
+        // Apply to Buttons
+        val rollBtn = view.findViewById<Button>(R.id.buttonRoll)
+        rollBtn.setBackgroundColor(elementColor)
+
+        val clearBtn = view.findViewById<Button>(R.id.buttonClear)
+        clearBtn.setBackgroundColor(elementColor)
+
+        applyGlobalColors(view as ViewGroup, textColor, elementColor)
+
 
         // Find all the UI components by their ID
         checkBoxRerollOne = view.findViewById<CheckBox>(R.id.checkBoxRerollOne)
@@ -69,7 +85,7 @@ class RollFragment : Fragment() {
         buttonClear = view.findViewById<Button>(R.id.buttonClear)
         textView = view.findViewById<TextView>(R.id.textView)
         spinnerSavedRules = view.findViewById<Spinner>(R.id.spinnerSavedRules)
-        store = LocalStore(requireContext())
+        tray = view.findViewById<ViewGroup>(R.id.diceTrayContainer)
 
         val btnAdd = view.findViewById<Button>(R.id.btnAddDiceRow)
         btnAdd.setOnClickListener {
@@ -153,6 +169,8 @@ class RollFragment : Fragment() {
             val specs = mutableListOf<RollSpec>()
             val container = view?.findViewById<LinearLayout>(R.id.layoutDiceContainer)
 
+            var totalNumDice = 0
+
             container?.children?.forEach { row ->
                 val spinner = row.findViewById<Spinner>(R.id.spinnerDiceRow)
                 val qty = row.findViewById<EditText>(R.id.editDiceCountRow).text.toString().toIntOrNull() ?: 1
@@ -167,13 +185,13 @@ class RollFragment : Fragment() {
                 }
 
                 specs.add(RollSpec(die, qty))
+                totalNumDice += qty
             }
 
-
-            // Get the number of dice to roll, defaulting to 1 if empty
-            val numDiceStr = textInputEditText!!.getText().toString()
-            val numDice = if (numDiceStr.isEmpty()) 1 else numDiceStr.toInt()
-
+            if (specs.isEmpty()) {
+                specs.add(RollSpec(Dice.standard(Dice.Standard.D6), 1))
+                totalNumDice = 1
+            }
             // Create the RollSpec based on the die type and count
             // val spec = RollSpec(Dice.Companion.standard(selectedDie), numDice)
 
@@ -186,9 +204,9 @@ class RollFragment : Fragment() {
             var keepHigh: Int? = null
             var keepLow: Int? = null
             if (radioKeepHighest!!.isChecked()) {
-                keepHigh = if (numDice > 1) numDice - 1 else 1 // Example: Keep all but one
+                keepHigh = if (totalNumDice > 1) totalNumDice - 1 else 1 // Example: Keep all but one
             } else if (radioKeepLowest!!.isChecked()) {
-                keepLow = if (numDice > 1) numDice - 1 else 1
+                keepLow = if (totalNumDice > 1) totalNumDice - 1 else 1
             }
 
 
@@ -203,25 +221,127 @@ class RollFragment : Fragment() {
             diceEngine.roll(specs, modifier)
         }
 
+        triggerVisualRoll(result)
+
         // Display result in the TextView
-        textView!!.setText(
-            String.format(
-                "Result: %d\nRolls: %s",
-                result.total,
-                result.facesRolled.toString()
+        textView?.postDelayed({
+            textView?.text = String.format("Result: %d\nRolls: %s", result.total, result.facesRolled.toString())
+        }, 1000)
+    }
+
+    private fun applyGlobalColors(viewGroup: ViewGroup, txtCol: Int, elemCol: Int) {
+        for (i in 0 until viewGroup.childCount) {
+            val child = viewGroup.getChildAt(i)
+            if (child is TextView && child !is Button) {
+                child.setTextColor(txtCol)
+            } else if (child is Button) {
+                child.setBackgroundColor(elemCol)
+            } else if (child is ViewGroup) {
+                applyGlobalColors(child, txtCol, elemCol)
+            }
+        }
+    }
+
+    private fun triggerVisualRoll(result: RollResult) {
+        val tray = view?.findViewById<ViewGroup>(R.id.diceTrayContainer) ?: return
+        val rollId = System.currentTimeMillis()
+        val viewsFromThisRoll = mutableListOf<View>()
+
+        // Filter for standard dice only and limit to 10
+        val totalRolls = result.numericContributions.size
+        val displayLimit = 10
+
+        for (i in 0 until minOf(totalRolls, displayLimit)) {
+            val value = result.numericContributions[i]
+            val faceText = result.facesRolled[i] ?: ""
+            val diceContainer = FrameLayout(requireContext())
+            diceContainer.tag = rollId
+
+            val diceView = ImageView(requireContext())
+            diceView.setImageResource(R.drawable.ic_dice_rolling_placeholder)
+            val imgParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
             )
-        )
+            diceContainer.addView(diceView, imgParams)
+
+            val resultLabel = TextView(requireContext()).apply {
+                text = faceText
+                setTextColor(android.graphics.Color.BLACK) // Or use your store color
+                textSize = 14f
+                gravity = android.view.Gravity.CENTER
+                visibility = View.INVISIBLE // Hide during animation
+                setTypeface(null, android.graphics.Typeface.BOLD)
+            }
+            diceContainer.addView(resultLabel)
+
+            // Randomize position
+            val containerParams = FrameLayout.LayoutParams(120, 120)
+            containerParams.leftMargin = (50..maxOf(50, tray.width - 150)).random()
+            containerParams.topMargin = (50..maxOf(50, tray.height - 150)).random()
+            diceContainer.layoutParams = containerParams
+            tray.addView(diceContainer)
+            viewsFromThisRoll.add(diceContainer)
+
+
+            // Animate
+            diceContainer.animate()
+                .rotation(1080f) // 3 full spins
+                .scaleX(1.2f).scaleY(1.2f)
+                .setDuration(600 + (i * 150).toLong())
+                .withEndAction {
+                    // Change the image to the final result
+                    diceView.setImageResource(getDiceDrawable(value))
+
+                    // Show text ONLY if it's a generic die or a custom string
+                    if (value > 6 || value == 0) {
+                        resultLabel.visibility = View.VISIBLE
+                    }
+
+                    diceContainer.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start()
+                }
+                .start()
+
+            tray.postDelayed({
+                viewsFromThisRoll.forEach { view ->
+                    view.animate()
+                        .alpha(0f)
+                        .setDuration(500)
+                        .withEndAction {
+                            tray.removeView(view)
+                        }
+                        .start()
+                }
+            }, 3000)
+        }
+    }
+
+    // Helper to map numeric result to a drawable resource
+    private fun getDiceDrawable(value: Int): Int {
+        return when(value) {
+            1 -> R.drawable.dice_1
+            2 -> R.drawable.dice_2
+            3 -> R.drawable.dice_3
+            4 -> R.drawable.dice_4
+            5 -> R.drawable.dice_5
+            6 -> R.drawable.dice_6
+            else -> R.drawable.dice_generic // For D20s etc
+        }
     }
 
     private fun clearInputs() {
-        textInputEditText!!.setText("")
-        editTextFlat!!.setText("")
-        checkBoxRerollOne!!.setChecked(false)
-        radioKeepHighest!!.setChecked(false)
-        radioKeepLowest!!.setChecked(false)
-        spinnerDice!!.setSelection(0) // Reset spinner to the first item
-        spinnerSavedRules!!.setSelection(0)
-        textView!!.setText("Roll Output") // Reset the output text
+        editTextFlat?.setText("")
+        checkBoxRerollOne?.isChecked = false
+        radioKeepHighest?.isChecked = false
+        radioKeepLowest?.isChecked = false
+        spinnerSavedRules?.setSelection(0)
+        textView?.setText("Roll Output") // Reset the output text
+
+        // Remove all dynamic dice rows and dice icons
+        val container = view?.findViewById<LinearLayout>(R.id.layoutDiceContainer)
+        container?.removeAllViews()
+        val tray = view?.findViewById<ViewGroup>(R.id.diceTrayContainer) ?: return
+        tray?.removeAllViews()
     }
 }
 
