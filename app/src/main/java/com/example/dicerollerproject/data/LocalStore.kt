@@ -3,6 +3,7 @@ package com.example.dicerollerproject.data
 import android.content.Context
 import android.content.SharedPreferences
 import com.example.dicerollerproject.data.model.CustomDie
+import com.example.dicerollerproject.data.model.RollHistoryItem
 import com.example.dicerollerproject.data.model.Rule
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -14,6 +15,8 @@ class LocalStore(context: Context) {
     private val prefs: SharedPreferences
     private val gson: Gson
     private val keyElementColour = "element_color"
+
+    private val keyHistory = "roll_history"
 
 
     init {
@@ -71,6 +74,18 @@ class LocalStore(context: Context) {
 
     fun saveElementColor(color: Int) = prefs.edit().putInt(keyElementColour, color).apply()
     fun getElementColor(): Int = prefs.getInt(keyElementColour, android.graphics.Color.parseColor("#6200EE"))
+
+    fun saveHistory(history: List<RollHistoryItem>) {
+        val json = gson.toJson(history)
+        prefs.edit().putString(keyHistory, json).apply()
+    }
+
+    fun listHistory(): MutableList<RollHistoryItem> {
+        val json = prefs.getString(keyHistory, null)
+        if (json.isNullOrEmpty()) return mutableListOf()
+        val type = object : TypeToken<List<RollHistoryItem>>() {}.type
+        return gson.fromJson(json, type)
+    }
 
     companion object {
         private const val PREF_NAME = "dice_store"

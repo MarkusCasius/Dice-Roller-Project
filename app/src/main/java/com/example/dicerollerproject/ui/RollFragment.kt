@@ -1,5 +1,6 @@
 package com.example.dicerollerproject.ui
 
+import android.media.Image
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -20,12 +21,14 @@ import androidx.fragment.app.Fragment
 import com.example.dicerollerproject.R
 import com.example.dicerollerproject.data.LocalStore
 import com.example.dicerollerproject.data.RuleMapper
+import com.example.dicerollerproject.data.model.RollHistoryItem
 import com.example.dicerollerproject.data.model.Rule
 import com.example.dicerollerproject.domain.Dice
 import com.example.dicerollerproject.domain.DiceEngine
 import com.example.dicerollerproject.domain.Modifier
 import com.example.dicerollerproject.domain.RollResult
 import com.example.dicerollerproject.domain.RollSpec
+import java.util.UUID
 
 class RollFragment : Fragment() {
     private lateinit var diceEngine: DiceEngine
@@ -42,6 +45,8 @@ class RollFragment : Fragment() {
     private var textView: TextView? = null
     private var spinnerSavedRules: Spinner? = null
     private var tray: ViewGroup? = null
+    private var buttonHistory: ImageButton? = null
+
     private var savedRules: MutableList<Rule?> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,6 +91,12 @@ class RollFragment : Fragment() {
         textView = view.findViewById<TextView>(R.id.textView)
         spinnerSavedRules = view.findViewById<Spinner>(R.id.spinnerSavedRules)
         tray = view.findViewById<ViewGroup>(R.id.diceTrayContainer)
+        buttonHistory = view.findViewById<ImageButton>(R.id.btnHistory)
+
+
+        buttonHistory?.setOnClickListener {
+            showHistoryBottomSheet()
+        }
 
         val btnAdd = view.findViewById<Button>(R.id.btnAddDiceRow)
         btnAdd.setOnClickListener {
@@ -154,6 +165,8 @@ class RollFragment : Fragment() {
 
     private fun rollDice() {
         val selectedRuleIndex = spinnerSavedRules?.selectedItemPosition ?: 0
+        val specs = mutableListOf<RollSpec>()
+        val modifier: Modifier = Modifier.Companion.none()
 
         val result: RollResult = if (selectedRuleIndex > 0) {
             // --- SAVED RULE SELECTED ---
@@ -166,7 +179,6 @@ class RollFragment : Fragment() {
         } else {
             // --- MANUAL ROLL SELECTED ---
             // Get the selected die type from the spinner
-            val specs = mutableListOf<RollSpec>()
             val container = view?.findViewById<LinearLayout>(R.id.layoutDiceContainer)
 
             var totalNumDice = 0
@@ -211,7 +223,6 @@ class RollFragment : Fragment() {
 
 
             // Create the Modifier object
-            val modifier: Modifier = Modifier.Companion.none()
             modifier.flat = flatMod
             modifier.rerollOnesOnce = rerollOnes
             modifier.keepHighest = keepHigh
@@ -221,7 +232,28 @@ class RollFragment : Fragment() {
             diceEngine.roll(specs, modifier)
         }
 
+        val description = if (selectedRuleIndex > 0) {
+            savedRules[selectedRuleIndex - 1]?.name ?: "Unnamed Rule"
+        } else {
+            // For manual rolls, get the specs from the loop logic
+            // (You'll need to make 'specs' accessible here)
+            getDiceDescription(specs)
+        }
+
         triggerVisualRoll(result)
+
+        val historyItem = RollHistoryItem(
+            id = UUID.randomUUID().toString(),
+            timestamp = System.currentTimeMillis(),
+            diceDescription = description,
+            results = result.facesRolled.toString(),
+            total = result.total,
+            modifierLabel = "Mod: ${modifier.flat}"
+        )
+
+        val history = store.listHistory()
+        history.add(0, historyItem) // Add to top
+        store.saveHistory(history.take(50)) // Keep last 50 rolls
 
         // Display result in the TextView
         textView?.postDelayed({
@@ -329,6 +361,13 @@ class RollFragment : Fragment() {
         }
     }
 
+    private fun getDiceDescription(specs: List<RollSpec>): String {
+        return specs.joinToString(", ") { spec ->
+            val name = if (spec.die.isStandard) "D${spec.die.sides()}" else "Custom"
+            "${spec.count}x $name"
+        }
+    }
+
     private fun clearInputs() {
         editTextFlat?.setText("")
         checkBoxRerollOne?.isChecked = false
@@ -342,6 +381,11 @@ class RollFragment : Fragment() {
         container?.removeAllViews()
         val tray = view?.findViewById<ViewGroup>(R.id.diceTrayContainer) ?: return
         tray?.removeAllViews()
+    }
+
+    private fun showHistoryBottomSheet() {
+        val bottomSheet = RollHistoryBottomSheet()
+        bottomSheet.show(parentFragmentManager, "RollHistory")
     }
 }
 
