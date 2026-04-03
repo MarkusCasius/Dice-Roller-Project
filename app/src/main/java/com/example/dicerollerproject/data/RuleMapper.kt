@@ -26,7 +26,6 @@ object RuleMapper {
             rule?.modifier?.let { mod ->
                 keepHighest = mod.keepHighest
                 keepLowest = mod.keepLowest
-                rerollOnesOnce = mod.rerollOnesOnce
             }
         }
         return Prepared(specs, m)

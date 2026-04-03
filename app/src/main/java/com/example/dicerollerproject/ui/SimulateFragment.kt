@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ProgressBar
@@ -16,15 +17,17 @@ import com.example.dicerollerproject.R
 import com.example.dicerollerproject.data.LocalStore
 import com.example.dicerollerproject.data.RuleMapper
 import com.example.dicerollerproject.data.model.Rule
+import com.example.dicerollerproject.domain.Dice
 import com.example.dicerollerproject.domain.DiceEngine
+import com.example.dicerollerproject.domain.Modifier
+import com.example.dicerollerproject.domain.RollSpec
 import java.util.Locale
 import java.util.TreeMap
 import kotlin.math.max
 import kotlin.math.min
 
 /**
- * A simple [Fragment] subclass.
- * create an instance of this fragment.
+ * A Fragment used to show the user the likelihood of roll outcomes
  */
 class SimulateFragment : Fragment() {
     private var store: LocalStore? = null
@@ -35,6 +38,14 @@ class SimulateFragment : Fragment() {
     private var textResults: TextView? = null
     private var layoutHistogram: LinearLayout? = null
     private var savedRules: MutableList<Rule?> = mutableListOf()
+    private var switchCategoricalMode: com.google.android.material.switchmaterial.SwitchMaterial? = null
+    // Modifiers
+    private var editReroll: EditText? = null
+    private var editFlat: EditText? = null
+    private var checkKeepHighest: CheckBox? = null
+    private var editKeepHighest: EditText? = null
+    private var checkKeepLowest: CheckBox? = null
+    private var editKeepLowest: EditText? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -53,127 +64,251 @@ class SimulateFragment : Fragment() {
         progressBar = view.findViewById<ProgressBar>(R.id.progressSimulation)
         textResults = view.findViewById<TextView>(R.id.textSimResults)
         layoutHistogram = view.findViewById<LinearLayout>(R.id.layoutHistogram)
+        switchCategoricalMode = view.findViewById(R.id.switchCategoricalMode)
+
+        // Modifiers
+        editReroll = view.findViewById(R.id.editRerollSim)
+        editFlat = view.findViewById(R.id.editFlatSim)
+        checkKeepHighest = view.findViewById(R.id.checkKeepHighestSim)
+        editKeepHighest = view.findViewById(R.id.editKeepHighestSim)
+        checkKeepLowest = view.findViewById(R.id.checkKeepLowestSim)
+        editKeepLowest = view.findViewById(R.id.editKeepLowestSim)
+
+        checkKeepHighest?.setOnCheckedChangeListener { _, isChecked ->
+            editKeepHighest?.isEnabled = isChecked
+            if (isChecked) {
+                checkKeepLowest?.isChecked = false
+                if (editKeepHighest?.text.isNullOrEmpty()) editKeepHighest?.setText("1")
+            }
+        }
+        checkKeepLowest?.setOnCheckedChangeListener { _, isChecked ->
+            editKeepLowest?.isEnabled = isChecked
+            if (isChecked) {
+                checkKeepHighest?.isChecked = false
+                if (editKeepLowest?.text.isNullOrEmpty()) editKeepLowest?.setText("1")
+            }
+        }
 
         refreshRuleSpinner()
 
-        view.findViewById<View?>(R.id.btnRunSimulation)
+        view.findViewById<View>(R.id.btnRunSimulation)
             .setOnClickListener(View.OnClickListener { v: View? -> runSimulation() })
     }
 
     private fun refreshRuleSpinner() {
         savedRules = store!!.listRules()
-        val names: MutableList<String?> = ArrayList<String?>()
-        for (r in savedRules!!) names.add(r?.name)
+        val names = mutableListOf("Manual Simulation")
+        names.addAll(savedRules.map { it?.name ?: "Unnamed Rule" })
 
-        val adapter = ArrayAdapter<String?>(
-            requireContext(),
-            android.R.layout.simple_spinner_item, names
-        )
-        spinnerRules!!.setAdapter(adapter)
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, names)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerRules?.adapter = adapter
     }
 
     private fun runSimulation() {
-        if (savedRules!!.isEmpty()) return
+        if (savedRules.isEmpty()) return
 
-        val selectedRule = savedRules!!.get(spinnerRules!!.getSelectedItemPosition())
+        val selectedRule = savedRules[spinnerRules!!.selectedItemPosition]
         val allDice = store!!.listCustomDice()
-        val prepared = RuleMapper.prepare(selectedRule, allDice)
+        val selectedRuleIndex = spinnerRules?.selectedItemPosition ?: 0
 
-        var trials: Int
-        try {
-            trials = editTrials!!.getText().toString().toInt()
-        } catch (e: NumberFormatException) {
-            trials = 1000
+        val (specs, modifier) = if (selectedRuleIndex > 0) {
+            val selectedRule = savedRules[selectedRuleIndex - 1]
+            val prepared = RuleMapper.prepare(selectedRule, allDice)
+            // Use specs and modifier defined in the saved rule
+            Pair(prepared.specs, prepared.mod)
+        } else {
+            // Manual Mode: Default to rolling 1D6 if no rule is selected
+            val manualSpec = mutableListOf(RollSpec(Dice.standard(Dice.Standard.D6), 1))
+            Pair(manualSpec, Modifier.none())
         }
 
-        progressBar!!.setVisibility(View.VISIBLE)
-        progressBar!!.setMax(trials)
-        progressBar!!.setProgress(0)
-        layoutHistogram!!.removeAllViews()
+        val rerollInput = editReroll?.text?.toString() ?: ""
+        modifier.rerollValues.clear()
+        modifier.rerollFaces.clear()
 
-        val finalTrials = trials
+        if (rerollInput.isNotEmpty()) {
+            val parts = rerollInput.split(",").map { it.trim() }
+            for (part in parts) {
+                if (part.contains("-")) {
+                    val rangeParts = part.split("-")
+                    val start = rangeParts.getOrNull(0)?.toIntOrNull()
+                    val end = rangeParts.getOrNull(1)?.toIntOrNull()
+                    if (start != null && end != null) {
+                        for (v in start..end) modifier.rerollValues.add(v)
+                    }
+                } else {
+                    val numeric = part.toIntOrNull()
+                    if (numeric != null) modifier.rerollValues.add(numeric)
+                    else modifier.rerollFaces.add(part)
+                }
+            }
+        }
+
+        // Handle Flat Modifier
+        val flatModStr = editFlat?.text?.toString() ?: ""
+        modifier.flat = flatModStr.toIntOrNull() ?: 0
+
+        // Handle Keep Highest/Lowest
+        modifier.keepHighest = null
+        modifier.keepLowest = null
+
+        if (checkKeepHighest?.isChecked == true) {
+            val qty = editKeepHighest?.text.toString().toIntOrNull() ?: 1
+            modifier.keepHighest = qty
+        } else if (checkKeepLowest?.isChecked == true) {
+            val qty = editKeepLowest?.text.toString().toIntOrNull() ?: 1
+            modifier.keepLowest = qty
+        }
+
+        val isCategorical = specs.any { !it.die.isStandard }
+        val groupByOutcome = switchCategoricalMode?.isChecked ?: false
+
+        val trials: Int = try {
+            editTrials!!.getText().toString().toInt()
+        } catch (e: NumberFormatException) {
+            1000
+        }
+
+        progressBar!!.visibility = View.VISIBLE
+        progressBar!!.max = trials
+        progressBar!!.progress = 0
+        layoutHistogram!!.removeAllViews()
 
         // Run on a background thread to keep UI smooth
         Thread(Runnable {
-            val frequencyMap: MutableMap<Int?, Int?> = TreeMap<Int?, Int?>()
+            val frequencyMap: TreeMap<String, Int> = TreeMap { a, b ->
+                val aInt = a.toIntOrNull()
+                val bInt = b.toIntOrNull()
+                if (aInt != null && bInt != null) {
+                    aInt.compareTo(bInt)
+                } else {
+                    a.compareTo(b)
+                }
+            }
             var totalSum: Long = 0
-            var min = Int.Companion.MAX_VALUE
-            var max = Int.Companion.MIN_VALUE
+            var min = Int.MAX_VALUE
+            var max = Int.MIN_VALUE
 
-            for (i in 0..<finalTrials) {
-                val res = engine!!.roll(prepared.specs, prepared.mod)
-                val `val` = res.total
+            for (i in 0 until trials) {
+                val res = engine!!.roll(specs, modifier)
 
-                totalSum += `val`.toLong()
-                min = min(min, `val`)
-                max = max(max, `val`)
-                frequencyMap.put(`val`, frequencyMap.getOrDefault(`val`, 0)!! + 1)
+                if (isCategorical) {
+                    // Mode: Categorical - Count every face that appeared in this roll
+                    if (groupByOutcome) {
+                        // MODE: Per Outcome (e.g., "Fire, Ice")
+                        // Join all faces from this specific trial into one string
+                        val outcomeKey = res.facesRolled.filterNotNull().sorted().joinToString(", ")
+                        frequencyMap[outcomeKey] = frequencyMap.getOrDefault(outcomeKey, 0) + 1
+                    } else {
+                        // MODE: Per Face (Previous behavior)
+                        res.facesRolled.forEach { face ->
+                            val key = face ?: "null"
+                            frequencyMap[key] = frequencyMap.getOrDefault(key, 0) + 1
+                        }
+                    }
+                } else {
+                    // Mode: Ordinal - Count the total sum
+                    val value = res.total
+                    totalSum += value.toLong()
+                    min = min(min, value)
+                    max = max(max, value)
+                    val key = value.toString()
+                    frequencyMap[key] = frequencyMap.getOrDefault(key, 0)!! + 1
+                }
 
-                if (i % 100 == 0) { // Update progress periodically
+                if (i % 100 == 0) {
                     val currentI = i
-                    if (getActivity() != null) requireActivity().runOnUiThread(Runnable {
-                        progressBar!!.setProgress(
-                            currentI
-                        )
-                    })
+                    requireActivity().runOnUiThread { progressBar!!.progress = currentI }
                 }
             }
 
             // Calculations
-            val mean = totalSum.toDouble() / finalTrials
-            var mode = -1
-            var maxFreq = -1
-            for (entry in frequencyMap.entries) {
-                if (entry.value!! > maxFreq) {
-                    maxFreq = entry.value!!
-                    mode = entry.key!!
+            val stats = if (!isCategorical) {
+                val mean = totalSum.toDouble() / trials
+                var mode = ""
+                var maxF = -1
+                frequencyMap.forEach { (k, v) ->
+                    if (v!! > maxF) {
+                        maxF = v
+                        mode = k
+                    }
                 }
+                String.format(Locale.getDefault(), "Mean: %.2f\nMode: %s\nMin: %d\nMax: %d\nTrials: %d",
+                    mean, mode, min, max, trials)
+            } else {
+                val label = if (groupByOutcome) "Unique Outcomes" else "Unique Faces"
+                "Categorical Simulation\nTotal Results Tracked: ${frequencyMap.values.sum()}\nTrials: $trials"
             }
 
-            // Display Results
-            val stats = String.format(
-                Locale.getDefault(),
-                "Mean: %.2f\nMode: %d\nMin: %d\nMax: %d\nTrials: %d",
-                mean, mode, min, max, finalTrials
-            )
+            val maxFreq = frequencyMap.values.maxOrNull() ?: 1
+            val denominator = if (isCategorical) frequencyMap.values.sum().toDouble() else trials.toDouble()
 
-            val finalMin = min
-            val finalMax = max
-            val finalMaxFreq = maxFreq
-            if (getActivity() != null) {
-                requireActivity().runOnUiThread(Runnable {
-                    progressBar!!.setVisibility(View.GONE)
-                    textResults!!.setText(stats)
-                    drawHistogram(frequencyMap, finalMaxFreq)
-                })
+            requireActivity().runOnUiThread {
+                progressBar!!.visibility = View.GONE
+                textResults!!.text = stats
+                drawHistogram(frequencyMap, maxFreq, denominator)
             }
         }).start()
     }
 
-    private fun drawHistogram(data: MutableMap<Int?, Int?>, maxFreq: Int) {
+    private fun drawHistogram(data: MutableMap<String, Int>, maxFreq: Int, totalPopulation: Double) {
+        layoutHistogram!!.removeAllViews()
+
         for (entry in data.entries) {
+            val count = entry.value ?: 0
+            val percentage = (count.toDouble() / totalPopulation) * 100
+            val fullLabel = entry.key
+
             // Create a bar (View)
             val barContainer = LinearLayout(requireContext())
-            barContainer.setOrientation(LinearLayout.VERTICAL)
-            barContainer.setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL)
+            barContainer.orientation = LinearLayout.VERTICAL
+            barContainer.gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+            barContainer.setPadding(8, 0, 8, 0)
 
+            // Interactive Bar
+            barContainer.isClickable = true
+            barContainer.setFocusable(true)
+            val outValue = android.util.TypedValue()
+            requireContext().theme.resolveAttribute(android.R.attr.selectableItemBackground, outValue, true)
+            barContainer.setBackgroundResource(outValue.resourceId) // Add ripple effect
+
+            barContainer.setOnClickListener {
+                val message = "Result: $fullLabel\n" +
+                        "Count: $count\n" +
+                        "Likelihood: ${String.format(Locale.getDefault(), "%.2f%%", percentage)}"
+
+                // Update the results text view or show a Toast
+                textResults!!.text = message
+            }
+
+            // Tooltip for percentage
+            val percLabel = TextView(requireContext())
+            percLabel.text = String.format(Locale.getDefault(), "%.1f%%", percentage)
+            percLabel.textSize = 8f
+            percLabel.gravity = Gravity.CENTER
+            barContainer.addView(percLabel)
+
+            // Bar itself
             val bar = View(requireContext())
-            val heightPx = ((entry.value!!.toDouble() / maxFreq) * 400).toInt() // 400px max height
+            val heightPx = ((count.toDouble() / maxFreq) * 400).toInt() // 400px max height
             // Calculate height as percentage of max frequency
             val barParams = LinearLayout.LayoutParams(50, heightPx)
-            barParams.setMargins(6, 0, 6, 0)
+            barParams.setMargins(8, 0, 8, 0)
             bar.setLayoutParams(barParams)
-            bar.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_dark))
-
-            val valLabel = TextView(requireContext())
-            valLabel.setText(entry.key.toString())
-            valLabel.setTextSize(10f)
-            valLabel.setGravity(Gravity.CENTER)
-
+            bar.setBackgroundColor(resources.getColor(android.R.color.holo_blue_dark))
             barContainer.addView(bar)
-            barContainer.addView(valLabel)
 
-            bar.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_dark))
+            // X-Axis Label
+            val valLabel = TextView(requireContext())
+            valLabel.text = entry.key.toString()
+            valLabel.textSize = 10f
+            valLabel.setPadding(0, 4, 0, 0)
+            valLabel.setGravity(Gravity.CENTER)
+            valLabel.maxLines = 1
+            valLabel.ellipsize = android.text.TextUtils.TruncateAt.END
+            valLabel.layoutParams = LinearLayout.LayoutParams(80, ViewGroup.LayoutParams.WRAP_CONTENT)
+            barContainer.addView(valLabel)
 
             // Tooltip or label could be added here
             layoutHistogram!!.addView(barContainer)

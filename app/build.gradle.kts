@@ -52,4 +52,5 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     implementation(libs.datastore.preferences)
     implementation(libs.gson)
+    implementation("androidx.gridlayout:gridlayout:1.1.0")
 }

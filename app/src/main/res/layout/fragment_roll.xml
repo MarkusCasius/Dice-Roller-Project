@@ -54,7 +54,8 @@
         android:text="+ Add Dice Type"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/scrollDice"
-        app:layout_constraintBottom_toTopOf="@id/divider"/>
+        app:layout_constraintBottom_toTopOf="@id/divider"
+        android:padding="8dp"/>
 
     <View
         android:id="@+id/divider"
@@ -64,19 +65,31 @@
         app:layout_constraintBottom_toTopOf="@+id/modifierGrid" />
 
     <!-- Manual Modifiers Area -->
-    <GridLayout
+    <androidx.gridlayout.widget.GridLayout
         android:id="@+id/modifierGrid"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:columnCount="2"
         android:padding="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/spinnerSavedRules">
+        app:layout_constraintBottom_toTopOf="@+id/spinnerSavedRules"
+        app:columnCount="2">
 
-        <CheckBox
-            android:id="@+id/checkBoxRerollOne"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutReroll"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="wrap_content"
+            android:minWidth="200dp"
             android:layout_height="wrap_content"
-            android:text="Reroll Ones" />
+            android:hint="Reroll (e.g. 1-2 or Fire)"
+            android:padding="8dp">
+
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editTextReroll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp" />
+    </com.google.android.material.textfield.TextInputLayout>
 
         <EditText
             android:id="@+id/editTextFlat"
@@ -85,14 +98,44 @@
             android:hint="Flat Mod"
             android:inputType="numberSigned" />
 
-        <RadioGroup
-            android:id="@+id/RadioKeepDice"
+        <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-            <RadioButton android:id="@+id/RadioKeepHighest" android:text="Drop Lowest"  android:layout_height="match_parent" android:layout_width="match_parent"/>
-            <RadioButton android:id="@+id/RadioKeepLowest" android:text="Drop Highest"  android:layout_height="match_parent" android:layout_width="match_parent"/>
-        </RadioGroup>
-    </GridLayout>
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <CheckBox
+                android:id="@+id/checkBoxKeepHighest"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Keep Highest" />
+            <EditText
+                android:id="@+id/editTextKeepHighest"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:hint="Qty"
+                android:inputType="number"
+                android:enabled="false" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <CheckBox
+                android:id="@+id/checkBoxKeepLowest"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Keep Lowest" />
+            <EditText
+                android:id="@+id/editTextKeepLowest"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:hint="Qty"
+                android:inputType="number"
+                android:enabled="false" />
+        </LinearLayout>
+    </androidx.gridlayout.widget.GridLayout>
 
     <Spinner
         android:id="@+id/spinnerSavedRules"

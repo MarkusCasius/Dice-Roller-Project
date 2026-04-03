@@ -52,17 +52,21 @@ class DiceEngine(seed: Long?) {
             }
         }
 
+        val totalRolled = contribs.size
+        if (totalRolled == 0) return RollResult(0, faces, contribs)
+
         // Apply keep/drop logic
         var indices = contribs.indices.toMutableList()
-        for (i in contribs.indices) indices.add(i)
 
         if (mod.keepHighest != null) {
             // Sort indices based on values in contribs (Descending)
             indices.sortByDescending { contribs[it] }
+            val takeCount = mod.keepHighest!!.coerceAtMost(totalRolled)
             indices = indices.take(mod.keepHighest!!).toMutableList()
         } else if (mod.keepLowest != null) {
             // Sort indices based on values in contribs (Ascending)
             indices.sortBy { contribs[it] }
+            val takeCount = mod.keepLowest!!.coerceAtMost(totalRolled)
             indices = indices.take(mod.keepLowest!!).toMutableList()
         }
 
@@ -91,10 +95,13 @@ class DiceEngine(seed: Long?) {
         // Performs base roll
         val idx = rollIndex(die.sides())
         var face = die.faceAtIndex(idx)
+        val numeric = parseNumeric(face)
 
-        // Handle the "reroll 1s once" modifier
+        // Checks if numeric value OR string face matches reroll criteria
+        val shouldReroll = mod.rerollValues.contains(numeric) ||
+                (face != null && mod.rerollFaces.contains(face))
 
-        if (mod.rerollOnesOnce && parseNumeric(face) == 1) {
+        if (shouldReroll) {
             face = die.faceAtIndex(rollIndex(die.sides()))
         }
         return face

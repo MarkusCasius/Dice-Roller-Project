@@ -36,9 +36,12 @@ class RollFragment : Fragment() {
 
     // UI Components
     private var spinnerDice: Spinner? = null
-    private var checkBoxRerollOne: CheckBox? = null
-    private var radioKeepHighest: RadioButton? = null
-    private var radioKeepLowest: RadioButton? = null
+
+    private var editTextReroll: EditText? = null
+    private var checkBoxKeepHighest: CheckBox? = null
+    private var editTextKeepHighest: EditText? = null
+    private var checkBoxKeepLowest: CheckBox? = null
+    private var editTextKeepLowest: EditText? = null
     private var editTextFlat: EditText? = null
     private var buttonRoll: Button? = null
     private var buttonClear: Button? = null
@@ -82,10 +85,12 @@ class RollFragment : Fragment() {
 
 
         // Find all the UI components by their ID
-        checkBoxRerollOne = view.findViewById<CheckBox>(R.id.checkBoxRerollOne)
-        radioKeepHighest = view.findViewById<RadioButton>(R.id.RadioKeepHighest)
-        radioKeepLowest = view.findViewById<RadioButton>(R.id.RadioKeepLowest)
+        editTextReroll = view.findViewById(R.id.editTextReroll)
         editTextFlat = view.findViewById<EditText>(R.id.editTextFlat)
+        checkBoxKeepHighest = view.findViewById(R.id.checkBoxKeepHighest)
+        editTextKeepHighest = view.findViewById(R.id.editTextKeepHighest)
+        checkBoxKeepLowest = view.findViewById(R.id.checkBoxKeepLowest)
+        editTextKeepLowest = view.findViewById(R.id.editTextKeepLowest)
         buttonRoll = view.findViewById<Button>(R.id.buttonRoll)
         buttonClear = view.findViewById<Button>(R.id.buttonClear)
         textView = view.findViewById<TextView>(R.id.textView)
@@ -93,6 +98,21 @@ class RollFragment : Fragment() {
         tray = view.findViewById<ViewGroup>(R.id.diceTrayContainer)
         buttonHistory = view.findViewById<ImageButton>(R.id.btnHistory)
 
+        checkBoxKeepHighest?.setOnCheckedChangeListener { _, isChecked ->
+            editTextKeepHighest?.isEnabled = isChecked
+            if (isChecked) {
+                checkBoxKeepLowest?.isChecked = false
+                if (editTextKeepHighest?.text.isNullOrEmpty()) editTextKeepHighest?.setText("1")
+            }
+        }
+
+        checkBoxKeepLowest?.setOnCheckedChangeListener { _, isChecked ->
+            editTextKeepLowest?.isEnabled = isChecked
+            if (isChecked) {
+                checkBoxKeepHighest?.isChecked = false
+                if (editTextKeepLowest?.text.isNullOrEmpty()) editTextKeepLowest?.setText("1")
+            }
+        }
 
         buttonHistory?.setOnClickListener {
             showHistoryBottomSheet()
@@ -212,19 +232,47 @@ class RollFragment : Fragment() {
             val flatMod = if (flatModStr.isEmpty()) 0 else flatModStr.toInt()
 
             // Check the reroll and keep/drop options
-            val rerollOnes = checkBoxRerollOne!!.isChecked()
-            var keepHigh: Int? = null
-            var keepLow: Int? = null
-            if (radioKeepHighest!!.isChecked()) {
-                keepHigh = if (totalNumDice > 1) totalNumDice - 1 else 1 // Example: Keep all but one
-            } else if (radioKeepLowest!!.isChecked()) {
-                keepLow = if (totalNumDice > 1) totalNumDice - 1 else 1
+            val rerollInput = editTextReroll?.text?.toString() ?: ""
+            modifier.rerollValues.clear()
+            modifier.rerollFaces.clear()
+
+            if (rerollInput.isNotEmpty()) {
+                val parts = rerollInput.split(",").map { it.trim() }
+                for (part in parts) {
+                    if (part.contains("-")) {
+                        // Handle range: "1-3"
+                        val rangeParts = part.split("-")
+                        val start = rangeParts.getOrNull(0)?.toIntOrNull()
+                        val end = rangeParts.getOrNull(1)?.toIntOrNull()
+                        if (start != null && end != null) {
+                            for (v in start..end) modifier.rerollValues.add(v)
+                        }
+                    } else {
+                        // Handle single value or face
+                        val numeric = part.toIntOrNull()
+                        if (numeric != null) {
+                            modifier.rerollValues.add(numeric)
+                        } else {
+                            modifier.rerollFaces.add(part)
+                        }
+                    }
+                }
             }
 
+            var keepHigh: Int? = null
+            var keepLow: Int? = null
+
+            if (checkBoxKeepHighest?.isChecked == true) {
+                // Read user input, default to 1 if empty
+                val qty = editTextKeepHighest?.text.toString().toIntOrNull() ?: 1
+                keepHigh = qty.coerceIn(1, totalNumDice)
+            } else if (checkBoxKeepLowest?.isChecked == true) {
+                val qty = editTextKeepLowest?.text.toString().toIntOrNull() ?: 1
+                keepLow = qty.coerceIn(1, totalNumDice)
+            }
 
             // Create the Modifier object
             modifier.flat = flatMod
-            modifier.rerollOnesOnce = rerollOnes
             modifier.keepHighest = keepHigh
             modifier.keepLowest = keepLow
 
@@ -370,9 +418,11 @@ class RollFragment : Fragment() {
 
     private fun clearInputs() {
         editTextFlat?.setText("")
-        checkBoxRerollOne?.isChecked = false
-        radioKeepHighest?.isChecked = false
-        radioKeepLowest?.isChecked = false
+        editTextReroll?.setText("")
+        checkBoxKeepHighest?.isChecked = false
+        editTextKeepHighest?.setText("")
+        checkBoxKeepLowest?.isChecked = false
+        editTextKeepLowest?.setText("")
         spinnerSavedRules?.setSelection(0)
         textView?.setText("Roll Output") // Reset the output text
 

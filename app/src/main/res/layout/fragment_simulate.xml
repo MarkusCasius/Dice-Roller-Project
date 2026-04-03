@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".ui.SimulateFragment"
     android:padding="16dp">
 
@@ -31,6 +32,84 @@
             android:hint="Number of Trials (N)"
             android:inputType="number"
             android:text="1000" />
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switchCategoricalMode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Categorical: Group by Total Outcome"
+            android:checked="false"
+            tools:ignore="UseSwitchCompat" />
+
+        <androidx.gridlayout.widget.GridLayout
+            android:id="@+id/modifierGridSim"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            app:columnCount="2">
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="wrap_content"
+                android:minWidth="200dp"
+                android:layout_height="wrap_content"
+                android:hint="Reroll (e.g. 1-2, Fire)"
+                android:padding="4dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editRerollSim"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <EditText
+                android:id="@+id/editFlatSim"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="Flat Mod"
+                android:inputType="numberSigned"
+                android:padding="8dp"/>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <CheckBox
+                    android:id="@+id/checkKeepHighestSim"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Keep High" />
+                <EditText
+                    android:id="@+id/editKeepHighestSim"
+                    android:layout_width="50dp"
+                    android:layout_height="wrap_content"
+                    android:hint="Qty"
+                    android:inputType="number"
+                    android:enabled="false" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <CheckBox
+                    android:id="@+id/checkKeepLowestSim"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Keep Low" />
+                <EditText
+                    android:id="@+id/editKeepLowestSim"
+                    android:layout_width="50dp"
+                    android:layout_height="wrap_content"
+                    android:hint="Qty"
+                    android:inputType="number"
+                    android:enabled="false" />
+            </LinearLayout>
+        </androidx.gridlayout.widget.GridLayout>
 
         <Button
             android:id="@+id/btnRunSimulation"
@@ -84,7 +163,7 @@
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:rotation="-90"
-                android:text="Frequency (Count)"
+                android:text="Likelihood (%)"
                 android:textSize="12sp" />
 
             <LinearLayout

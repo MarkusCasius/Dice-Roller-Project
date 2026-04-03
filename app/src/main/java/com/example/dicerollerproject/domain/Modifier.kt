@@ -7,17 +7,17 @@ class Modifier {
     var flat: Int = 0 // +/- constant
 
 
-    /*TODO: Need to Investigate the drop lowest one logic and fix */
-    /** Highest Dice to keep. If null, rule isn't applied. Currently acts as a drop lowest one  */
+    /** Highest Dice to keep. If null, rule isn't applied.  */
     @JvmField
     var keepHighest: Int? = null // null if not set
-    /*TODO: Need to Investigate the drop highest one logic and fix */
-    /** Lowest dice is kept. if null, rule isn't applied. Currently acts as a drop highest one  */
+    /** Lowest dice is kept. if null, rule isn't applied. */
     var keepLowest: Int? = null // null if not set
 
-    /** If true, rerolls dice with a value of "1" exactly one time.  */
-    @JvmField
-    var rerollOnesOnce: Boolean = false
+    /** Defines specific numeric values that should be rerolled once */
+    val rerollValues = mutableSetOf<Int>()
+
+    /** Defines specific string faces that should be rerolled once */
+    val rerollFaces = mutableSetOf<String>()
 
     companion object {
         /**

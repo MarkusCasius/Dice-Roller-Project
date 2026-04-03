@@ -49,6 +49,8 @@ class CreateFragment : Fragment() {
         view.findViewById<View?>(R.id.btnSaveDie)
             .setOnClickListener(View.OnClickListener { v: View? -> saveDie() })
         view.findViewById<View?>(R.id.btnAddDiceToRule)
+            .setOnClickListener(View.OnClickListener { v: View? -> addDiceRowToRule() })
+        view.findViewById<View?>(R.id.btnSaveRule)
             .setOnClickListener(View.OnClickListener { v: View? -> saveRule() })
 
         refreshDiceSpinner()
