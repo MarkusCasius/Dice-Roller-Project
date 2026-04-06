@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -46,6 +47,7 @@ class SimulateFragment : Fragment() {
     private var editKeepHighest: EditText? = null
     private var checkKeepLowest: CheckBox? = null
     private var editKeepLowest: EditText? = null
+    private var btnRunSimulation: Button? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -84,6 +86,7 @@ class SimulateFragment : Fragment() {
         textResults = view.findViewById<TextView>(R.id.textSimResults)
         layoutHistogram = view.findViewById<LinearLayout>(R.id.layoutHistogram)
         switchCategoricalMode = view.findViewById(R.id.switchCategoricalMode)
+        btnRunSimulation = view.findViewById<Button>(R.id.btnRunSimulation)
 
         // Modifiers
         editReroll = view.findViewById(R.id.editRerollSim)
@@ -107,11 +110,10 @@ class SimulateFragment : Fragment() {
                 if (editKeepLowest?.text.isNullOrEmpty()) editKeepLowest?.setText("1")
             }
         }
+        btnRunSimulation?.setOnClickListener { runSimulation() }
 
         refreshRuleSpinner()
 
-        view.findViewById<View>(R.id.btnRunSimulation)
-            .setOnClickListener(View.OnClickListener { v: View? -> runSimulation() })
     }
 
     private fun refreshRuleSpinner() {
@@ -127,7 +129,6 @@ class SimulateFragment : Fragment() {
     private fun runSimulation() {
         if (savedRules.isEmpty()) return
 
-        val selectedRule = savedRules[spinnerRules!!.selectedItemPosition]
         val allDice = store!!.listCustomDice()
         val selectedRuleIndex = spinnerRules?.selectedItemPosition ?: 0
 

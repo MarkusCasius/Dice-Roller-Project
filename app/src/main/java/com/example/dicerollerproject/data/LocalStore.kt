@@ -80,7 +80,7 @@ class LocalStore(context: Context) {
     fun getTextColor(): Int = prefs.getInt(keyElementColour, android.graphics.Color.BLACK)
 
     fun saveElementColor(color: Int) = prefs.edit().putInt(keyElementColour, color).apply()
-    fun getElementColor(): Int = prefs.getInt(keyElementColour, android.graphics.Color.parseColor("#00FFFFFF"))
+    fun getElementColor(): Int = prefs.getInt(keyElementColour, android.graphics.Color.parseColor("#FFFFFF")) // #00FFFFFF is invisible
 
     fun saveHistory(history: List<RollHistoryItem>) {
         val json = gson.toJson(history)
