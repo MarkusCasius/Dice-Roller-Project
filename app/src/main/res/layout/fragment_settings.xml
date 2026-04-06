@@ -13,4 +13,41 @@
 
     <Button android:id="@+id/btnElemGreen" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Forest Green" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Data Management"
+        android:layout_marginTop="24dp"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/btnExportRules"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Export Rules to JSON" />
+
+    <Button
+        android:id="@+id/btnImportRules"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Import Rules from JSON" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Dice Animation Speed"
+        android:layout_marginTop="24dp"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <Button android:id="@+id/btnAnimNormal" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Normal" />
+        <Button android:id="@+id/btnAnimFast" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Fast" />
+        <Button android:id="@+id/btnAnimInstant" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Instant" />
+    </LinearLayout>
+
 </LinearLayout>

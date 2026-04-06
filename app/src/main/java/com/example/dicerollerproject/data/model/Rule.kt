@@ -10,5 +10,5 @@ class Rule(
         var customDieId: String?, var count: Int
     )
 
-    class RuleModifier(var keepHighest: Int?, var keepLowest: Int?, var rerollOnesOnce: Boolean)
+    class RuleModifier(var keepHighest: Int?, var keepLowest: Int?, val rerollString: String?)
 }

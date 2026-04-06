@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
@@ -121,7 +122,18 @@ class CreateFragment : Fragment() {
             }
         }
 
-        val newRule = Rule(UUID.randomUUID().toString(), name, components, RuleModifier(null, null, false), 0)
+        val flatMod = view?.findViewById<EditText>(R.id.editRuleFlatMod)?.text.toString().toIntOrNull() ?: 0
+        val rerollStr = view?.findViewById<EditText>(R.id.editRuleReroll)?.text.toString()
+
+        val keepHigh = if (view?.findViewById<CheckBox>(R.id.checkRuleKeepHigh)?.isChecked == true)
+            view?.findViewById<EditText>(R.id.editRuleKeepHighQty)?.text.toString().toIntOrNull() ?: 1 else null
+
+        val keepLow = if (view?.findViewById<CheckBox>(R.id.checkRuleKeepLow)?.isChecked == true)
+            view?.findViewById<EditText>(R.id.editRuleKeepLowQty)?.text.toString().toIntOrNull() ?: 1 else null
+
+        val modifier = Rule.RuleModifier(keepHigh, keepLow, rerollStr)
+
+        val newRule = Rule(UUID.randomUUID().toString(), name, components, modifier, flatMod)
         val allRules = store?.listRules() ?: mutableListOf()
         allRules.add(newRule)
         store?.saveRules(allRules)

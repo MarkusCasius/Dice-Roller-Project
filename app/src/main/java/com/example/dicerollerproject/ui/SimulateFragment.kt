@@ -59,6 +59,25 @@ class SimulateFragment : Fragment() {
         store = LocalStore(requireContext())
         engine = DiceEngine(null)
 
+        spinnerRules?.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val isManual = position == 0
+                // Enable or disable manual inputs based on selection
+                setManualModifiersEnabled(isManual)
+
+                if (!isManual) {
+                    // If a rule is selected, show its modifiers in the UI (read-only)
+                    val rule = savedRules[position - 1]
+                    applyRuleToUI(rule)
+                } else {
+                    // If switching back to manual, clear the fields for fresh input
+                    clearManualModifiers()
+                }
+            }
+
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
+        }
+
         spinnerRules = view.findViewById<Spinner>(R.id.spinnerSimulateRule)
         editTrials = view.findViewById<EditText>(R.id.editTrials)
         progressBar = view.findViewById<ProgressBar>(R.id.progressSimulation)
@@ -120,45 +139,38 @@ class SimulateFragment : Fragment() {
         } else {
             // Manual Mode: Default to rolling 1D6 if no rule is selected
             val manualSpec = mutableListOf(RollSpec(Dice.standard(Dice.Standard.D6), 1))
-            Pair(manualSpec, Modifier.none())
-        }
+            val manualMod = Modifier.none()
 
-        val rerollInput = editReroll?.text?.toString() ?: ""
-        modifier.rerollValues.clear()
-        modifier.rerollFaces.clear()
-
-        if (rerollInput.isNotEmpty()) {
-            val parts = rerollInput.split(",").map { it.trim() }
-            for (part in parts) {
-                if (part.contains("-")) {
-                    val rangeParts = part.split("-")
-                    val start = rangeParts.getOrNull(0)?.toIntOrNull()
-                    val end = rangeParts.getOrNull(1)?.toIntOrNull()
-                    if (start != null && end != null) {
-                        for (v in start..end) modifier.rerollValues.add(v)
+            // Parse Manual Reroll Logic
+            val rerollInput = editReroll?.text?.toString() ?: ""
+            if (rerollInput.isNotEmpty()) {
+                val parts = rerollInput.split(",").map { it.trim() }
+                for (part in parts) {
+                    if (part.contains("-")) {
+                        val range = part.split("-")
+                        val start = range.getOrNull(0)?.toIntOrNull()
+                        val end = range.getOrNull(1)?.toIntOrNull()
+                        if (start != null && end != null) {
+                            for (v in start..end) manualMod.rerollValues.add(v)
+                        }
+                    } else {
+                        val numeric = part.toIntOrNull()
+                        if (numeric != null) manualMod.rerollValues.add(numeric)
+                        else manualMod.rerollFaces.add(part)
                     }
-                } else {
-                    val numeric = part.toIntOrNull()
-                    if (numeric != null) modifier.rerollValues.add(numeric)
-                    else modifier.rerollFaces.add(part)
                 }
             }
-        }
+            // Parse Manual Flat Mod
+            manualMod.flat = editFlat?.text?.toString()?.toIntOrNull() ?: 0
 
-        // Handle Flat Modifier
-        val flatModStr = editFlat?.text?.toString() ?: ""
-        modifier.flat = flatModStr.toIntOrNull() ?: 0
+            // Parse Manual Keep High/Low
+            if (checkKeepHighest?.isChecked == true) {
+                manualMod.keepHighest = editKeepHighest?.text.toString().toIntOrNull() ?: 1
+            } else if (checkKeepLowest?.isChecked == true) {
+                manualMod.keepLowest = editKeepLowest?.text.toString().toIntOrNull() ?: 1
+            }
 
-        // Handle Keep Highest/Lowest
-        modifier.keepHighest = null
-        modifier.keepLowest = null
-
-        if (checkKeepHighest?.isChecked == true) {
-            val qty = editKeepHighest?.text.toString().toIntOrNull() ?: 1
-            modifier.keepHighest = qty
-        } else if (checkKeepLowest?.isChecked == true) {
-            val qty = editKeepLowest?.text.toString().toIntOrNull() ?: 1
-            modifier.keepLowest = qty
+            Pair(manualSpec, Modifier.none())
         }
 
         val isCategorical = specs.any { !it.die.isStandard }
@@ -313,5 +325,40 @@ class SimulateFragment : Fragment() {
             // Tooltip or label could be added here
             layoutHistogram!!.addView(barContainer)
         }
+    }
+
+    private fun setManualModifiersEnabled(enabled: Boolean) {
+        val alpha = if (enabled) 1.0f else 0.5f
+
+        // Toggle all modifier inputs
+        editReroll?.isEnabled = enabled
+        editFlat?.isEnabled = enabled
+        checkKeepHighest?.isEnabled = enabled
+        checkKeepLowest?.isEnabled = enabled
+
+        // Visual feedback: dim the grid when disabled
+        view?.findViewById<androidx.gridlayout.widget.GridLayout>(R.id.modifierGridSim)?.alpha = alpha
+    }
+
+    private fun applyRuleToUI(rule: Rule?) {
+        rule?.let {
+            editFlat?.setText(it.flat.toString())
+            editReroll?.setText(it.modifier?.rerollString ?: "")
+
+            checkKeepHighest?.isChecked = it.modifier?.keepHighest != null
+            editKeepHighest?.setText(it.modifier?.keepHighest?.toString() ?: "")
+
+            checkKeepLowest?.isChecked = it.modifier?.keepLowest != null
+            editKeepLowest?.setText(it.modifier?.keepLowest?.toString() ?: "")
+        }
+    }
+
+    private fun clearManualModifiers() {
+        editFlat?.setText("")
+        editReroll?.setText("")
+        checkKeepHighest?.isChecked = false
+        editKeepHighest?.setText("")
+        checkKeepLowest?.isChecked = false
+        editKeepLowest?.setText("")
     }
 }

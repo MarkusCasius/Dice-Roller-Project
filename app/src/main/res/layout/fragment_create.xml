@@ -80,6 +80,42 @@
             android:layout_height="wrap_content"
             android:text="+ Add Dice to Rule" />
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Modifiers for this Rule:"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"/>
+
+        <EditText
+            android:id="@+id/editRuleFlatMod"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Flat Modifier (e.g. +2)"
+            android:inputType="numberSigned"/>
+
+        <EditText
+            android:id="@+id/editRuleReroll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Reroll (e.g. 1-2, Fire)"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <CheckBox android:id="@+id/checkRuleKeepHigh"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Keep High"/>
+            <EditText android:id="@+id/editRuleKeepHighQty"
+                android:layout_width="60dp" android:layout_height="wrap_content" android:inputType="number" android:hint="Qty"/>
+
+            <CheckBox android:id="@+id/checkRuleKeepLow"
+                android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Keep Low" android:layout_marginStart="8dp"/>
+            <EditText android:id="@+id/editRuleKeepLowQty"
+                android:layout_width="60dp" android:layout_height="wrap_content" android:inputType="number" android:hint="Qty"/>
+        </LinearLayout>
+
         <Button
             android:id="@+id/btnSaveRule"
             android:layout_width="match_parent"

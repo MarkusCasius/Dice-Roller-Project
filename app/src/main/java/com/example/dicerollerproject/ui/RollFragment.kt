@@ -67,6 +67,23 @@ class RollFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        spinnerSavedRules?.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (position == 0) {
+                    // "Manual Roll" selected: Enable everything and clear
+                    setManualModifiersEnabled(true)
+                    clearInputs()
+                } else {
+                    // Saved Rule selected: Disable manual inputs and show the Rule's modifiers
+                    val rule = savedRules[position - 1]
+                    setManualModifiersEnabled(false)
+                    applyRuleToUI(rule)
+                }
+            }
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
+        }
+
         store = LocalStore(requireContext())
         val textColor = store.getTextColor()
         val elementColor = store.getElementColor()
@@ -322,10 +339,47 @@ class RollFragment : Fragment() {
         }
     }
 
+    // For altering whether manual modifiers are enabled
+    private fun setManualModifiersEnabled(enabled: Boolean) {
+        editTextReroll?.isEnabled = enabled
+        editTextFlat?.isEnabled = enabled
+        checkBoxKeepHighest?.isEnabled = enabled
+        checkBoxKeepLowest?.isEnabled = enabled
+        // Also disable the "Add Dice" button because Rules have fixed dice
+        view?.findViewById<Button>(R.id.btnAddDiceRow)?.isEnabled = enabled
+
+        // If disabled, maybe change alpha to look "grayed out"
+        val alpha = if (enabled) 1.0f else 0.5f
+        view?.findViewById<View>(R.id.modifierGrid)?.alpha = alpha
+    }
+
+    private fun applyRuleToUI(rule: Rule?) {
+        rule?.let {
+            editTextFlat?.setText(it.flat.toString())
+            editTextReroll?.setText(it.modifier?.rerollString ?: "")
+
+            checkBoxKeepHighest?.isChecked = it.modifier?.keepHighest != null
+            editTextKeepHighest?.setText(it.modifier?.keepHighest?.toString() ?: "")
+
+            checkBoxKeepLowest?.isChecked = it.modifier?.keepLowest != null
+            editTextKeepLowest?.setText(it.modifier?.keepLowest?.toString() ?: "")
+
+            // Clear the dynamic dice rows and show a placeholder or the rule's dice
+            val container = view?.findViewById<LinearLayout>(R.id.layoutDiceContainer)
+            container?.removeAllViews()
+            val infoText = TextView(requireContext()).apply {
+                text = "Using dice defined in Rule: ${it.name}"
+                setPadding(16, 16, 16, 16)
+            }
+            container?.addView(infoText)
+        }
+    }
+
     private fun triggerVisualRoll(result: RollResult) {
         val tray = view?.findViewById<ViewGroup>(R.id.diceTrayContainer) ?: return
         val rollId = System.currentTimeMillis()
         val viewsFromThisRoll = mutableListOf<View>()
+        val animSpeed = store.getAnimSpeed()
 
         // Filter for standard dice only and limit to 10
         val totalRolls = result.numericContributions.size
@@ -363,24 +417,32 @@ class RollFragment : Fragment() {
             tray.addView(diceContainer)
             viewsFromThisRoll.add(diceContainer)
 
-
-            // Animate
-            diceContainer.animate()
-                .rotation(1080f) // 3 full spins
-                .scaleX(1.2f).scaleY(1.2f)
-                .setDuration(600 + (i * 150).toLong())
-                .withEndAction {
-                    // Change the image to the final result
-                    diceView.setImageResource(getDiceDrawable(value))
-
-                    // Show text ONLY if it's a generic die or a custom string
-                    if (value > 6 || value == 0) {
-                        resultLabel.visibility = View.VISIBLE
-                    }
-
-                    diceContainer.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start()
+            if (animSpeed == 0.0f) {
+                // --- INSTANT MODE ---
+                diceView.setImageResource(getDiceDrawable(value))
+                if (value > 6 || value == 0) {
+                    resultLabel.visibility = View.VISIBLE
                 }
-                .start()
+            } else {
+                // --- ANIMATED MODE ---
+                val baseDuration = (600 + (i * 150)).toLong()
+                val scaledDuration = (baseDuration * animSpeed).toLong()
+
+                diceContainer.animate()
+                    .rotation(1080f)
+                    .scaleX(1.2f).scaleY(1.2f)
+                    .setDuration(scaledDuration) // Apply the scaled duration
+                    .withEndAction {
+                        diceView.setImageResource(getDiceDrawable(value))
+                        if (value > 6 || value == 0) {
+                            resultLabel.visibility = View.VISIBLE
+                        }
+                        diceContainer.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start()
+                    }
+                    .start()
+            }
+
+            val clearDelay = if (animSpeed == 0.0f) 2000L else 3000L
 
             tray.postDelayed({
                 viewsFromThisRoll.forEach { view ->

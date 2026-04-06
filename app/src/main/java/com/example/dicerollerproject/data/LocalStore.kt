@@ -15,8 +15,8 @@ class LocalStore(context: Context) {
     private val prefs: SharedPreferences
     private val gson: Gson
     private val keyElementColour = "element_color"
-
     private val keyHistory = "roll_history"
+    private val keyAnimationSpeed = "anim_speed"
 
 
     init {
@@ -68,6 +68,13 @@ class LocalStore(context: Context) {
     fun clearAll() {
         prefs.edit().clear().apply()
     }
+
+    fun saveAnimSpeed(speed: Float) = prefs.edit().putFloat(keyAnimationSpeed, speed).apply()
+
+    /**
+     * Returns 1.0f (Normal), 0.4f (Fast), or 0.0f (Instant)
+     */
+    fun getAnimSpeed(): Float = prefs.getFloat(keyAnimationSpeed, 1.0f)
 
     fun saveTextColor(color: Int) = prefs.edit().putInt(keyElementColour, color).apply()
     fun getTextColor(): Int = prefs.getInt(keyElementColour, android.graphics.Color.BLACK)

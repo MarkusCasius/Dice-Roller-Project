@@ -26,6 +26,26 @@ object RuleMapper {
             rule?.modifier?.let { mod ->
                 keepHighest = mod.keepHighest
                 keepLowest = mod.keepLowest
+
+                mod.rerollString?.let { input ->
+                    if (input.isNotEmpty()) {
+                        val parts = input.split(",").map { it.trim() }
+                        for (part in parts) {
+                            if (part.contains("-")) {
+                                val range = part.split("-")
+                                val start = range.getOrNull(0)?.toIntOrNull()
+                                val end = range.getOrNull(1)?.toIntOrNull()
+                                if (start != null && end != null) {
+                                    for (v in start..end) rerollValues.add(v)
+                                }
+                            } else {
+                                val numeric = part.toIntOrNull()
+                                if (numeric != null) rerollValues.add(numeric)
+                                else rerollFaces.add(part)
+                            }
+                        }
+                    }
+                }
             }
         }
         return Prepared(specs, m)
