@@ -7,6 +7,7 @@ import com.example.dicerollerproject.data.model.RollHistoryItem
 import com.example.dicerollerproject.data.model.Rule
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.util.UUID
 
 /**
  * Handles local persistence of custom dice and rules using SharedPreferences and GSON.
@@ -23,7 +24,61 @@ class LocalStore(context: Context) {
         // Initialize SharedPreferences in Private mode (only accessible by this app)
         this.prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         this.gson = Gson()
+
+        // Seeds test rules/dice
+        if (listRules().isEmpty()) {
+            seedInitialData()
+        }
     }
+
+    /**
+     * Seeds the initial data for first-time users.
+     */
+    private fun seedInitialData() {
+        val initialDice = mutableListOf<CustomDie?>()
+        val initialRules = mutableListOf<Rule?>()
+
+        // Create the Confusion Die faces
+        val confusionDieId = UUID.randomUUID().toString()
+        val confusionDie = CustomDie(
+            confusionDieId,
+            "Confusion Dice",
+            mutableListOf("Confused", "Confused", "Fizzle", "Fail", "Fail")
+        )
+        initialDice.add(confusionDie)
+
+        // Create "Advantage" Rule: 2d20, Keep Highest 1
+        initialRules.add(Rule(
+            UUID.randomUUID().toString(),
+            "Advantage",
+            mutableListOf(Rule.RuleComponent(true, "D20", null, 2)),
+            Rule.RuleModifier(1, null, null),
+            0
+        ))
+
+        // Create "Fireball" Rule: 5d6
+        initialRules.add(Rule(
+            UUID.randomUUID().toString(),
+            "Fireball",
+            mutableListOf(Rule.RuleComponent(true, "D6", null, 5)),
+            Rule.RuleModifier(null, null, null),
+            0
+        ))
+
+        // Create "Confusion" Rule: 1x Confusion Die
+        initialRules.add(Rule(
+            UUID.randomUUID().toString(),
+            "Confusion",
+            mutableListOf(Rule.RuleComponent(false, null, confusionDieId, 1)),
+            Rule.RuleModifier(null, null, null),
+            0
+        ))
+
+        // Save everything to SharedPreferences
+        saveCustomDice(initialDice)
+        saveRules(initialRules)
+    }
+
 
     /**
      * Saves the list of custom dice to local storage.
