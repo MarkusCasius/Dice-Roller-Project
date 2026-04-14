@@ -1,127 +1,251 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
+    android:background="#F5F5F5"
     tools:context=".ui.CreateFragment">
 
-    <LinearLayout
+    <ScrollView
+        android:id="@+id/scrollCreate"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <!-- SECTION: CUSTOM DICE -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Create Custom Die"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <EditText
-            android:id="@+id/editDieName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Die Name (e.g., Elemental)" />
-
-        <EditText
-            android:id="@+id/editDieFaces"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Faces (comma separated: Fire,Ice,10)" />
-
-        <Button
-            android:id="@+id/btnSaveDie"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Save Custom Die" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="2dp"
-            android:layout_marginVertical="24dp"
-            android:background="#CCCCCC" />
-
-        <!-- SECTION: RULES -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Create Rule"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <EditText
-            android:id="@+id/editRuleName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Rule Name (e.g., Fireball)" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Dice in Rule:"
-            android:textStyle="italic" />
-
-        <!-- Dynamic Container for multi-dice rows -->
         <LinearLayout
-            android:id="@+id/ruleDiceContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingVertical="8dp" />
+            android:padding="16dp">
 
-        <Button
-            android:id="@+id/btnAddDiceToRule"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="+ Add Dice to Rule" />
+            <!-- Header Section -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Modifiers for this Rule:"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="Creation Lab"
+                    android:textColor="@color/black"
+                    android:textSize="24sp" />
 
-        <EditText
-            android:id="@+id/editRuleFlatMod"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Flat Modifier (e.g. +2)"
-            android:inputType="numberSigned"/>
+                <ImageButton
+                    android:id="@+id/btnHelp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_alignParentEnd="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@android:drawable/ic_menu_help"
+                    app:tint="@color/design_default_color_primary" />
+            </RelativeLayout>
 
-        <EditText
-            android:id="@+id/editRuleReroll"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Reroll (e.g. 1-2, Fire)"/>
+            <!-- Card 1: Custom Die Factory -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Custom Die Factory"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp"/>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Die Name (e.g., Elemental)">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editDieName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textCapWords"
+                            android:imeOptions="actionNext" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:hint="Faces (comma separated: Fire,Ice,10)">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editDieFaces"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:imeOptions="actionDone" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <Button
+                        android:id="@+id/btnSaveDie"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="Save New Die" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Card 2: Rule Architect -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Rule Architect"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp"/>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Rule Name (e.g., Fireball)">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editRuleName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textCapWords"
+                            android:imeOptions="actionNext" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="Dice Configuration"
+                        android:textSize="12sp"
+                        android:textAllCaps="true"
+                        android:textColor="#757575" />
+
+                    <LinearLayout
+                        android:id="@+id/ruleDiceContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+
+                    <Button
+                        android:id="@+id/btnAddDiceToRule"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+ Add Dice Type" />
+
+                    <!-- Modifiers -->
+                    <androidx.gridlayout.widget.GridLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        app:columnCount="2">
+
+                        <EditText
+                            android:id="@+id/editRuleFlatMod"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:hint="Flat Mod"
+                            android:inputType="numberSigned"
+                            app:layout_columnWeight="1" />
+
+                        <EditText
+                            android:id="@+id/editRuleReroll"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:hint="Reroll (e.g. 1)"
+                            app:layout_columnWeight="1" />
+                    </androidx.gridlayout.widget.GridLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="8dp">
+
+                        <CheckBox android:id="@+id/checkRuleKeepHigh" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Keep-High"/>
+                        <EditText android:id="@+id/editRuleKeepHighQty" android:layout_width="40dp" android:layout_height="wrap_content" android:inputType="number" android:textSize="12sp"/>
+
+                        <CheckBox android:id="@+id/checkRuleKeepLow" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Keep-Low"/>
+                        <EditText android:id="@+id/editRuleKeepLowQty" android:layout_width="40dp" android:layout_height="wrap_content" android:inputType="number" android:textSize="12sp"/>
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/btnSaveRule"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="Save Complete Rule" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Help Overlay -->
+    <FrameLayout
+        android:id="@+id/helpOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#E6000000"
+        android:elevation="10dp"
+        android:padding="32dp"
+        android:visibility="gone">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_gravity="center"
+            android:orientation="vertical">
 
-            <CheckBox android:id="@+id/checkRuleKeepHigh"
-                android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Keep High"/>
-            <EditText android:id="@+id/editRuleKeepHighQty"
-                android:layout_width="60dp" android:layout_height="wrap_content" android:inputType="number" android:hint="Qty"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Creation Guide"
+                android:textColor="@color/white"
+                android:textSize="22sp"
+                android:textStyle="bold" />
 
-            <CheckBox android:id="@+id/checkRuleKeepLow"
-                android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Keep Low" android:layout_marginStart="8dp"/>
-            <EditText android:id="@+id/editRuleKeepLowQty"
-                android:layout_width="60dp" android:layout_height="wrap_content" android:inputType="number" android:hint="Qty"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:lineSpacingExtra="8dp"
+                android:text="• Factory: Create dice with unique faces (e.g., Fire, Ice).\n• Architect: Bundle multiple dice and modifiers into a single Rule.\n• Reroll: Comma separated values or ranges (e.g., 1-2, Fail)."
+                android:textColor="@color/white" />
+
+            <Button
+                android:id="@+id/btnCloseHelp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="24dp"
+                android:text="Got it" />
         </LinearLayout>
-
-        <Button
-            android:id="@+id/btnSaveRule"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Save Complete Rule" />
-
-    </LinearLayout>
-</ScrollView>
+    </FrameLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -15,17 +15,18 @@ import java.util.UUID
 class LocalStore(context: Context) {
     private val prefs: SharedPreferences
     private val gson: Gson
-    private val keyElementColour = "element_color"
+    private val keyElementColour = "bg_color"
+    private val keyButtonColour = "btn_color"
+    private val keyTextColour = "text_color"
     private val keyHistory = "roll_history"
     private val keyAnimationSpeed = "anim_speed"
 
 
     init {
-        // Initialize SharedPreferences in Private mode (only accessible by this app)
         this.prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         this.gson = Gson()
 
-        // Seeds test rules/dice
+        // Seeds initial rules/dice
         if (listRules().isEmpty()) {
             seedInitialData()
         }
@@ -52,8 +53,10 @@ class LocalStore(context: Context) {
             UUID.randomUUID().toString(),
             "Advantage",
             mutableListOf(Rule.RuleComponent(true, "D20", null, 2)),
-            Rule.RuleModifier(1, null, null),
-            0
+            Rule.RuleModifier(1, null, null, null),
+            0,
+            null
+
         ))
 
         // Create "Fireball" Rule: 5d6
@@ -61,8 +64,9 @@ class LocalStore(context: Context) {
             UUID.randomUUID().toString(),
             "Fireball",
             mutableListOf(Rule.RuleComponent(true, "D6", null, 5)),
-            Rule.RuleModifier(null, null, null),
-            0
+            Rule.RuleModifier(null, null, null, null),
+            0,
+            null
         ))
 
         // Create "Confusion" Rule: 1x Confusion Die
@@ -70,14 +74,25 @@ class LocalStore(context: Context) {
             UUID.randomUUID().toString(),
             "Confusion",
             mutableListOf(Rule.RuleComponent(false, null, confusionDieId, 1)),
-            Rule.RuleModifier(null, null, null),
-            0
+            Rule.RuleModifier(null, null, null, null),
+            0,
+            null
         ))
 
         // Save everything to SharedPreferences
         saveCustomDice(initialDice)
         saveRules(initialRules)
     }
+
+    // For updating the colour options
+    fun saveBackgroundColour(color: Int) = prefs.edit().putInt(keyElementColour, color).apply()
+    fun getBackgroundColour(): Int = prefs.getInt(keyElementColour, android.graphics.Color.parseColor("#F5F5F5"))
+
+    fun saveButtonColour(color: Int) = prefs.edit().putInt(keyButtonColour, color).apply()
+    fun getButtonColour(): Int = prefs.getInt(keyButtonColour, android.graphics.Color.parseColor("#6200EE"))
+
+    fun saveTextColour(color: Int) = prefs.edit().putInt(keyTextColour, color).apply()
+    fun getTextColour(): Int = prefs.getInt(keyTextColour, android.graphics.Color.BLACK)
 
 
     /**
@@ -118,30 +133,51 @@ class LocalStore(context: Context) {
     }
 
     /**
+     * Deletes a custom die by its ID.
+     */
+    fun deleteCustomDie(id: String?) {
+        val dice = listCustomDice()
+        dice.removeAll { it?.id == id }
+        saveCustomDice(dice)
+    }
+
+    /**
+     * Deletes a rule by its ID.
+     */
+    fun deleteRule(id: String?) {
+        val rules = listRules()
+        rules.removeAll { it?.id == id }
+        saveRules(rules)
+    }
+
+    /**
      * Wipes all data in the store.
      */
     fun clearAll() {
         prefs.edit().clear().apply()
     }
 
+    /**
+     * Saves the animation speed to local storage.
+     */
     fun saveAnimSpeed(speed: Float) = prefs.edit().putFloat(keyAnimationSpeed, speed).apply()
 
     /**
-     * Returns 1.0f (Normal), 0.4f (Fast), or 0.0f (Instant)
+     * Returns 1.0f (Normal), 0.4f (Fast), or 0.0f (Instant) that determines the animation's speed
      */
     fun getAnimSpeed(): Float = prefs.getFloat(keyAnimationSpeed, 1.0f)
 
-    fun saveTextColor(color: Int) = prefs.edit().putInt(keyElementColour, color).apply()
-    fun getTextColor(): Int = prefs.getInt(keyElementColour, android.graphics.Color.BLACK)
-
-    fun saveElementColor(color: Int) = prefs.edit().putInt(keyElementColour, color).apply()
-    fun getElementColor(): Int = prefs.getInt(keyElementColour, android.graphics.Color.parseColor("#FFFFFF")) // #00FFFFFF is invisible
-
+    /**
+     * Saves the roll history to local storage.
+     */
     fun saveHistory(history: List<RollHistoryItem>) {
         val json = gson.toJson(history)
         prefs.edit().putString(keyHistory, json).apply()
     }
 
+    /**
+     * Retrieves the roll history from local storage.
+     */
     fun listHistory(): MutableList<RollHistoryItem> {
         val json = prefs.getString(keyHistory, null)
         if (json.isNullOrEmpty()) return mutableListOf()

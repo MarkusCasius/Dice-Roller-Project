@@ -4,7 +4,22 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:padding="4dp">
-    <Spinner android:id="@+id/spinnerDiceRow" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"/>
-    <EditText android:id="@+id/editDiceCountRow" android:layout_width="60dp" android:layout_height="wrap_content" android:hint="Qty" android:inputType="number" android:text="1"/>
-    <ImageButton android:id="@+id/btnRemoveRow" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@android:drawable/ic_menu_delete" android:background="?attr/selectableItemBackgroundBorderless"/>
+    <Spinner
+        android:id="@+id/spinnerDiceRow"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"/>
+    <EditText
+        android:id="@+id/editDiceCountRow"
+        android:layout_width="60dp"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:imeOptions="actionDone"
+        android:hint="Qty" />
+    <ImageButton
+        android:id="@+id/btnRemoveRow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@android:drawable/ic_menu_delete"
+        android:background="?attr/selectableItemBackgroundBorderless"/>
 </LinearLayout>

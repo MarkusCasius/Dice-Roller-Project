@@ -1,7 +1,6 @@
 package com.example.dicerollerproject.domain
 
 import java.util.Random
-import kotlin.math.min
 
 /**
  * Logic engine for rolling dice, taking specifications and modifiers to produce a result
@@ -80,7 +79,7 @@ class DiceEngine(seed: Long?) {
         } else {
             sum = contribs.sum()
         }
-        sum += mod.flat // Flat modifier applied
+        sum += mod.flatBonus // Flat modifier applied
 
         return RollResult(sum, faces, contribs)
     }

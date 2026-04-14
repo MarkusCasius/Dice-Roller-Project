@@ -1,53 +1,225 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/settingsRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#F5F5F5">
 
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="Button/Element Color" android:layout_marginTop="24dp" android:textSize="18sp" />
-    <Button android:id="@+id/btnElemPurple" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Material Purple" />
-
-    <Button android:id="@+id/btnElemNone" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="White" />
-
-    <Button android:id="@+id/btnElemGreen" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Forest Green" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Data Management"
-        android:layout_marginTop="24dp"
-        android:textSize="18sp"
-        android:textStyle="bold" />
-
-    <Button
-        android:id="@+id/btnExportRules"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Export Rules to JSON" />
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-    <Button
-        android:id="@+id/btnImportRules"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Import Rules from JSON" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Dice Animation Speed"
-        android:layout_marginTop="24dp"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Preferences"
+                    android:textSize="24sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:textColor="@color/black" />
+                <ImageButton
+                    android:id="@+id/btnHelp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_alignParentEnd="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@android:drawable/ic_menu_help"
+                    app:tint="@color/design_default_color_primary" />
+            </RelativeLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <Button android:id="@+id/btnAnimNormal" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Normal" />
-        <Button android:id="@+id/btnAnimFast" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Fast" />
-        <Button android:id="@+id/btnAnimInstant" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Instant" />
-    </LinearLayout>
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardAccount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
 
-</LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Cloud Account"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp"/>
+
+                    <!-- Shown when logged out -->
+                    <Button
+                        android:id="@+id/btnNavLogin"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Login / Create Account"
+                        style="@style/Widget.MaterialComponents.Button" />
+
+                    <!-- Shown when logged in (Hidden by default) -->
+                    <LinearLayout
+                        android:id="@+id/layoutLoggedIn"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:id="@+id/txtUserStatus"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Logged in as: email@example.com"
+                            android:paddingBottom="12dp" />
+
+                        <Button
+                            android:id="@+id/btnSyncData"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Sync Local Data to Cloud"
+                            android:layout_marginBottom="8dp" />
+
+                        <Button
+                            android:id="@+id/btnLogout"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Logout" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Card 1: Theme & Colour (Heuristic: Aesthetic Design) -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Appearance" android:textStyle="bold" android:layout_marginBottom="12dp"/>
+
+                    <Button android:id="@+id/btnPickBg" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="Change Background Color" style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+
+                    <Button android:id="@+id/btnPickBtn" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="Change Button Color" style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+
+                    <Button android:id="@+id/btnPickTxt" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="Change Text Color" style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Card 2: Animation Speed -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Roll Animation Speed" android:textStyle="bold" />
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="8dp">
+                        <Button android:id="@+id/btnAnimNormal" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Normal" />
+                        <Button android:id="@+id/btnAnimFast" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Fast" />
+                        <Button android:id="@+id/btnAnimInstant" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="None" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Card 3: Manage Dice & Rules -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Manage Custom Dice" android:textStyle="bold" />
+                    <LinearLayout
+                        android:id="@+id/listManageDice"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Card 4: Manage Saved Rules -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Manage Saved Rules" android:textStyle="bold" />
+                    <LinearLayout
+                        android:id="@+id/listManageRules"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Card 5: Data Management -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Data Management" android:textStyle="bold" />
+                    <Button android:id="@+id/btnExportRules" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Export Rules (JSON)" />
+                    <Button android:id="@+id/btnImportRules" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Import Rules (JSON)" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Help Overlay -->
+    <FrameLayout android:id="@+id/helpOverlay" android:layout_width="match_parent" android:layout_height="match_parent"
+        android:background="#E6000000" android:visibility="gone" android:elevation="10dp" android:padding="32dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="center" android:orientation="vertical">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Settings Guide" android:textColor="@color/white" android:textSize="22sp" android:textStyle="bold" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="• Appearance: Customize colors globally.\n• Speed: Adjust how fast dice visuals complete.\n• Data: Backup or restore your custom rules." android:textColor="@color/white" android:lineSpacingExtra="8dp" />
+            <Button android:id="@+id/btnCloseHelp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:text="Got it" android:layout_gravity="center_horizontal"/>
+        </LinearLayout>
+    </FrameLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

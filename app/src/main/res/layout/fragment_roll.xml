@@ -1,60 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    tools:context=".ui.RollFragment">
+    android:background="#F5F5F5">
 
-
-    <!-- Output Area -->
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Roll Output"
-        android:textSize="20sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
+    <!-- 3D Dice Tray (Z-Layer: Bottom) -->
     <FrameLayout
         android:id="@+id/diceTrayContainer"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:elevation="1dp"
-        app:layout_constraintBottom_toBottomOf="@+id/scrollDice"
+        android:layout_height="260dp"
+        android:elevation="0dp"
+        android:background="#10000000"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Scrollable container for dynamic dice rows -->
+    <ImageButton
+        android:id="@+id/btnHistory"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="8dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@android:drawable/ic_menu_recent_history"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/btnHelp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="8dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@android:drawable/ic_menu_help"
+        android:elevation="5dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Result Card (Heuristic: Visibility of System Status) -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardResult"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="6dp"
+        app:layout_constraintBottom_toBottomOf="@+id/diceTrayContainer"
+        app:layout_constraintTop_toBottomOf="@+id/diceTrayContainer"
+        app:layout_constraintVertical_bias="0.5">
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="16dp"
+            android:text="Ready to Roll"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Dice Pool Section (Gestalt: Enclosure) -->
     <ScrollView
         android:id="@+id/scrollDice"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginVertical="8dp"
-        android:layerType="software"
         app:layout_constrainedHeight="true"
+        android:layerType="software"
         app:layout_constraintBottom_toTopOf="@+id/divider"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView">
+        app:layout_constraintTop_toBottomOf="@id/cardResult">
 
         <LinearLayout
             android:id="@+id/layoutDiceContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="8dp" />
+            android:padding="24dp" />
     </ScrollView>
 
     <View
         android:id="@+id/divider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="?android:attr/listDivider"
-        app:layout_constraintTop_toBottomOf="@id/scrollDice"
+        android:background="#DDDDDD"
         app:layout_constraintBottom_toTopOf="@+id/btnAddDiceRow" />
 
     <Button
@@ -62,119 +89,175 @@
         style="@style/Widget.MaterialComponents.Button.TextButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="+ Add Dice Type"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/divider"
-        app:layout_constraintBottom_toTopOf="@id/modifierGrid"
-        android:padding="8dp"/>
+        android:text="+ Add Dice"
+        app:layout_constraintBottom_toTopOf="@id/cardModifiers"
+        app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- Manual Modifiers Area -->
-    <androidx.gridlayout.widget.GridLayout
-        android:id="@+id/modifierGrid"
+    <!-- Modifiers Card (Gestalt: Proximity) -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardModifiers"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/spinnerSavedRules"
-        app:columnCount="2">
+        android:layout_marginHorizontal="16dp"
+        app:cardCornerRadius="12dp"
+        app:layout_constraintBottom_toTopOf="@id/spinnerSavedRules">
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/layoutReroll"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="wrap_content"
-            android:minWidth="200dp"
-            android:layout_height="wrap_content"
-            android:hint="Reroll (e.g. 1-2 or Fire)"
-            android:padding="8dp">
-
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editTextReroll"
+        <androidx.gridlayout.widget.GridLayout
+            android:id="@+id/modifierGrid"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="14sp" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:padding="8dp"
+            app:columnCount="2">
 
-        <EditText
-            android:id="@+id/editTextFlat"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:hint="Flat Mod"
-            android:inputType="numberSigned" />
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/layoutReroll"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="wrap_content"
+                android:minWidth="180dp"
+                android:layout_height="wrap_content"
+                android:hint="Reroll (e.g. 1-2 or Fire)"
+                android:padding="8dp">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-            <CheckBox
-                android:id="@+id/checkBoxKeepHighest"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editTextReroll"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:imeOptions="actionNext"
+                    android:textSize="14sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/layoutModifier"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="wrap_content"
+                android:minWidth="140dp"
+                android:layout_height="wrap_content"
+                android:hint="Numerical Mod"
+                android:inputType="numberSigned">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editTextFlat"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberSigned"
+                    android:imeOptions="actionDone"
+                    android:textSize="14sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Keep Highest" />
-            <EditText
-                android:id="@+id/editTextKeepHighest"
-                android:layout_width="50dp"
-                android:layout_height="wrap_content"
-                android:hint="Qty"
-                android:inputType="number"
-                android:enabled="false" />
-        </LinearLayout>
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <CheckBox
+                    android:id="@+id/checkBoxKeepHighest"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Keep Highest" />
+                <EditText
+                    android:id="@+id/editTextKeepHighest"
+                    android:layout_width="50dp"
+                    android:layout_height="wrap_content"
+                    android:hint="Qty"
+                    android:inputType="number"
+                    android:enabled="false" />
+            </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-            <CheckBox
-                android:id="@+id/checkBoxKeepLowest"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Keep Lowest" />
-            <EditText
-                android:id="@+id/editTextKeepLowest"
-                android:layout_width="50dp"
-                android:layout_height="wrap_content"
-                android:hint="Qty"
-                android:inputType="number"
-                android:enabled="false" />
-        </LinearLayout>
-    </androidx.gridlayout.widget.GridLayout>
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <CheckBox
+                    android:id="@+id/checkBoxKeepLowest"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Keep Lowest" />
+                <EditText
+                    android:id="@+id/editTextKeepLowest"
+                    android:layout_width="50dp"
+                    android:layout_height="wrap_content"
+                    android:hint="Qty"
+                    android:inputType="number"
+                    android:enabled="false" />
+            </LinearLayout>
+        </androidx.gridlayout.widget.GridLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <Spinner
         android:id="@+id/spinnerSavedRules"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/buttonRoll" />
+        android:layout_height="48dp"
+        android:layout_margin="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/layoutActions" />
 
-    <Button
-        android:id="@+id/buttonRoll"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/layoutActions"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
-        android:text="Roll"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/buttonClear"
-        app:layout_constraintHorizontal_chainStyle="packed"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:orientation="horizontal"
+        android:padding="16dp"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-    <Button
-        android:id="@+id/buttonClear"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:text="Clear"
-        app:layout_constraintBottom_toBottomOf="@+id/buttonRoll"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/buttonRoll" />
+        <Button
+            android:id="@+id/buttonRoll"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="2"
+            android:text="ROLL"
+            app:cornerRadius="12dp" />
 
-    <ImageButton    android:id="@+id/btnHistory"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@android:drawable/ic_menu_recent_history"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:padding="16dp"/>
+        <Button
+            android:id="@+id/buttonClear"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:text="Clear"
+            app:cornerRadius="12dp" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/helpOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#E6000000"
+        android:elevation="15dp"
+        android:padding="32dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Rolling Guide"
+                android:textColor="@color/white"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:lineSpacingExtra="8dp"
+                android:text="• Add Dice: Mix different dice types in your pool.\n• Saved Rules: Quickly apply pre-set configurations.\n• Tray: Visual dice appear in the top region.\n• History: Tap the clock icon to see recent rolls."
+                android:textColor="@color/white" />
+
+            <Button
+                android:id="@+id/btnCloseHelp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="24dp"
+                android:text="Got it" />
+        </LinearLayout>
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

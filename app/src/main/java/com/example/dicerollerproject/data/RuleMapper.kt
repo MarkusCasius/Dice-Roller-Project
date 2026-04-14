@@ -6,13 +6,15 @@ import com.example.dicerollerproject.domain.Dice
 import com.example.dicerollerproject.domain.Modifier
 import com.example.dicerollerproject.domain.RollSpec
 
+/**
+ * Mapper used to create a Rules by combining dice and rules.
+ */
 object RuleMapper {
     fun prepare(rule: Rule?, allDice: MutableList<CustomDie?>?): Prepared {
         val specs = mutableListOf<RollSpec>()
 
         rule?.components?.filterNotNull()?.forEach { c ->
             val die: Dice = if (c.isStandard) {
-                // c.standard is a String? (e.g. "D6"), valueOf converts string to Enum
                 Dice.standard(Dice.Standard.valueOf(c.standard!!))
             } else {
                 val cd = findById(allDice.orEmpty(), c.customDieId)
@@ -22,7 +24,7 @@ object RuleMapper {
         }
 
         val m = Modifier.none().apply {
-            flat = rule?.flat ?: 0
+            flatBonus = rule?.flat ?: 0
             rule?.modifier?.let { mod ->
                 keepHighest = mod.keepHighest
                 keepLowest = mod.keepLowest
@@ -57,9 +59,5 @@ object RuleMapper {
     }
 
     class Prepared(val specs: MutableList<RollSpec>, val mod: Modifier)
-}
-
-private fun Unit.valueOf(value: String?): Dice.Standard? {
-    return TODO("Provide the return value")
 }
 

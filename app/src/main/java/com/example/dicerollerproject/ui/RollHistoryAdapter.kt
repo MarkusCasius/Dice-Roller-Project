@@ -31,7 +31,6 @@ class RollHistoryAdapter(private val history: List<RollHistoryItem>) :
         val item = history[position]
         holder.txtDescription.text = item.diceDescription
         holder.txtTotal.text = item.total.toString()
-        // Clean up the bracket string from the list
         holder.txtResults.text = "${item.modifierLabel} • ${item.results.removeSurrounding("[", "]")}"
 
         val sdf =

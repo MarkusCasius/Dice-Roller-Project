@@ -4,7 +4,7 @@ package com.example.dicerollerproject.domain
  * Includes flat bonuses, keeping highest/lowest rolls, and rules for rerolling  */
 class Modifier {
     // Constant value added or subtracted from total sum
-    var flat: Int = 0 // +/- constant
+    var flatBonus: Int = 0 // +/- constant
 
 
     /** Highest Dice to keep. If null, rule isn't applied.  */

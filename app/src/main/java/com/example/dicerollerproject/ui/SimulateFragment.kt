@@ -9,8 +9,10 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.fragment.app.Fragment
@@ -22,6 +24,7 @@ import com.example.dicerollerproject.domain.Dice
 import com.example.dicerollerproject.domain.DiceEngine
 import com.example.dicerollerproject.domain.Modifier
 import com.example.dicerollerproject.domain.RollSpec
+import com.google.android.material.switchmaterial.SwitchMaterial
 import java.util.Locale
 import java.util.TreeMap
 import kotlin.math.max
@@ -39,7 +42,12 @@ class SimulateFragment : Fragment() {
     private var textResults: TextView? = null
     private var layoutHistogram: LinearLayout? = null
     private var savedRules: MutableList<Rule?> = mutableListOf()
-    private var switchCategoricalMode: com.google.android.material.switchmaterial.SwitchMaterial? = null
+    private var switchCategoricalMode: SwitchMaterial? = null
+
+    // Help Overlay
+    private lateinit var scrollSim: ScrollView
+    private lateinit var helpOverlay: View
+    private lateinit var labelHistogram: TextView
     // Modifiers
     private var editReroll: EditText? = null
     private var editFlat: EditText? = null
@@ -59,6 +67,7 @@ class SimulateFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         store = LocalStore(requireContext())
+        applyStoreStyles(requireView())
         engine = DiceEngine(null)
 
         spinnerRules?.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
@@ -68,7 +77,7 @@ class SimulateFragment : Fragment() {
                 setManualModifiersEnabled(isManual)
 
                 if (!isManual) {
-                    // If a rule is selected, show its modifiers in the UI (read-only)
+                    // If a rule is selected, show its modifiers in the UI
                     val rule = savedRules[position - 1]
                     applyRuleToUI(rule)
                 } else {
@@ -80,6 +89,7 @@ class SimulateFragment : Fragment() {
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
         }
 
+        // UI Elements Set up
         spinnerRules = view.findViewById<Spinner>(R.id.spinnerSimulateRule)
         editTrials = view.findViewById<EditText>(R.id.editTrials)
         progressBar = view.findViewById<ProgressBar>(R.id.progressSimulation)
@@ -88,13 +98,14 @@ class SimulateFragment : Fragment() {
         switchCategoricalMode = view.findViewById(R.id.switchCategoricalMode)
         btnRunSimulation = view.findViewById<Button>(R.id.btnRunSimulation)
 
-        // Modifiers
-        editReroll = view.findViewById(R.id.editRerollSim)
-        editFlat = view.findViewById(R.id.editFlatSim)
-        checkKeepHighest = view.findViewById(R.id.checkKeepHighestSim)
-        editKeepHighest = view.findViewById(R.id.editKeepHighestSim)
-        checkKeepLowest = view.findViewById(R.id.checkKeepLowestSim)
-        editKeepLowest = view.findViewById(R.id.editKeepLowestSim)
+        scrollSim = view.findViewById(R.id.scrollSim)
+        helpOverlay = view.findViewById(R.id.helpOverlay)
+        labelHistogram = view.findViewById(R.id.labelHistogram)
+        val btnHelp = view.findViewById<ImageButton>(R.id.btnHelp)
+        val btnCloseHelp = view.findViewById<Button>(R.id.btnCloseHelp)
+
+        btnHelp.setOnClickListener { helpOverlay.visibility = View.VISIBLE }
+        btnCloseHelp.setOnClickListener { helpOverlay.visibility = View.GONE }
 
         checkKeepHighest?.setOnCheckedChangeListener { _, isChecked ->
             editKeepHighest?.isEnabled = isChecked
@@ -116,6 +127,9 @@ class SimulateFragment : Fragment() {
 
     }
 
+    /**
+     * Refreshes the rule spinner
+     */
     private fun refreshRuleSpinner() {
         savedRules = store!!.listRules()
         val names = mutableListOf("Manual Simulation")
@@ -126,6 +140,9 @@ class SimulateFragment : Fragment() {
         spinnerRules?.adapter = adapter
     }
 
+    /**
+     * Runs a simulation with the provided rule
+     */
     private fun runSimulation() {
         if (savedRules.isEmpty()) return
 
@@ -162,7 +179,7 @@ class SimulateFragment : Fragment() {
                 }
             }
             // Parse Manual Flat Mod
-            manualMod.flat = editFlat?.text?.toString()?.toIntOrNull() ?: 0
+            manualMod.flatBonus = editFlat?.text?.toString()?.toIntOrNull() ?: 0
 
             // Parse Manual Keep High/Low
             if (checkKeepHighest?.isChecked == true) {
@@ -188,7 +205,7 @@ class SimulateFragment : Fragment() {
         progressBar!!.progress = 0
         layoutHistogram!!.removeAllViews()
 
-        // Run on a background thread to keep UI smooth
+        // Run on a background thread
         Thread(Runnable {
             val frequencyMap: TreeMap<String, Int> = TreeMap { a, b ->
                 val aInt = a.toIntOrNull()
@@ -214,7 +231,7 @@ class SimulateFragment : Fragment() {
                         val outcomeKey = res.facesRolled.filterNotNull().sorted().joinToString(", ")
                         frequencyMap[outcomeKey] = frequencyMap.getOrDefault(outcomeKey, 0) + 1
                     } else {
-                        // MODE: Per Face (Previous behavior)
+                        // Mode: Per Face (Previous behavior)
                         res.facesRolled.forEach { face ->
                             val key = face ?: "null"
                             frequencyMap[key] = frequencyMap.getOrDefault(key, 0) + 1
@@ -261,10 +278,17 @@ class SimulateFragment : Fragment() {
                 progressBar!!.visibility = View.GONE
                 textResults!!.text = stats
                 drawHistogram(frequencyMap, maxFreq, denominator)
+
+                scrollSim.postDelayed({
+                    scrollSim.smoothScrollTo(0, labelHistogram.top)
+                }, 300)
             }
         }).start()
     }
 
+    /**
+     * Draws a histogram based on the frequency map
+     */
     private fun drawHistogram(data: MutableMap<String, Int>, maxFreq: Int, totalPopulation: Double) {
         layoutHistogram!!.removeAllViews()
 
@@ -291,7 +315,7 @@ class SimulateFragment : Fragment() {
                         "Count: $count\n" +
                         "Likelihood: ${String.format(Locale.getDefault(), "%.2f%%", percentage)}"
 
-                // Update the results text view or show a Toast
+                // Update the results text view
                 textResults!!.text = message
             }
 
@@ -323,11 +347,13 @@ class SimulateFragment : Fragment() {
             valLabel.layoutParams = LinearLayout.LayoutParams(80, ViewGroup.LayoutParams.WRAP_CONTENT)
             barContainer.addView(valLabel)
 
-            // Tooltip or label could be added here
             layoutHistogram!!.addView(barContainer)
         }
     }
 
+    /**
+     * Enables or disables manual modifier inputs
+     */
     private fun setManualModifiersEnabled(enabled: Boolean) {
         val alpha = if (enabled) 1.0f else 0.5f
 
@@ -341,6 +367,9 @@ class SimulateFragment : Fragment() {
         view?.findViewById<androidx.gridlayout.widget.GridLayout>(R.id.modifierGridSim)?.alpha = alpha
     }
 
+    /**
+     * Applies the selected rule's modifiers to the UI
+     */
     private fun applyRuleToUI(rule: Rule?) {
         rule?.let {
             editFlat?.setText(it.flat.toString())
@@ -354,6 +383,9 @@ class SimulateFragment : Fragment() {
         }
     }
 
+    /**
+     * Clears the manual modifier inputs
+     */
     private fun clearManualModifiers() {
         editFlat?.setText("")
         editReroll?.setText("")
@@ -361,5 +393,52 @@ class SimulateFragment : Fragment() {
         editKeepHighest?.setText("")
         checkKeepLowest?.isChecked = false
         editKeepLowest?.setText("")
+    }
+
+    /**
+     * Changes the button, text and background colours of the fragment
+     */
+    private fun applyStoreStyles(rootView: View) {
+        val store = LocalStore(requireContext())
+        val bgColour = store.getBackgroundColour()
+        val txtColour = store.getTextColour()
+        val btnColour = store.getButtonColour()
+
+        // Set the background of the fragment root itself
+        rootView.setBackgroundColor(bgColour)
+
+        // Recursively apply colors to children
+        if (rootView is ViewGroup) {
+            applyRecursiveStyles(rootView, txtColour, btnColour)
+        }
+    }
+
+    /**
+     * Recursively applies colours to children
+     */
+    private fun applyRecursiveStyles(viewGroup: ViewGroup, txtCol: Int, btnCol: Int) {
+        for (i in 0 until viewGroup.childCount) {
+            val child = viewGroup.getChildAt(i)
+
+            when (child) {
+                is Button -> {
+                    child.setBackgroundColor(btnCol)
+                    child.setTextColor(android.graphics.Color.WHITE) // High contrast for buttons
+                }
+                is TextView -> {
+                    child.setTextColor(txtCol)
+                }
+                is com.google.android.material.textfield.TextInputLayout -> {
+                    child.defaultHintTextColor = android.content.res.ColorStateList.valueOf(txtCol)
+                    // Handle the nested EditText inside TextInputLayout
+                    val editText = child.editText
+                    editText?.setTextColor(txtCol)
+                    editText?.setHintTextColor(txtCol)
+                }
+                is ViewGroup -> {
+                    applyRecursiveStyles(child, txtCol, btnCol)
+                }
+            }
+        }
     }
 }

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "282525538587",
+    "firebase_url": "https://dice-roller-5a41b-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "dice-roller-5a41b",
+    "storage_bucket": "dice-roller-5a41b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:282525538587:android:c9f160b7ece12c073f1bbe",
+        "android_client_info": {
+          "package_name": "com.example.dicerollerproject"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "282525538587-ni5kfp6kn4ogsqrcji4eh339gsnlgjto.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.dicerollerproject",
+            "certificate_hash": "a59111e024784b2dc4796a164660d658ec95964e"
+          }
+        },
+        {
+          "client_id": "282525538587-m32u0i4i5oltjfj4flt8q47314f3ppq8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAWCuGvQJA6IBqs3-PeyDKje4Q668QcqBE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "282525538587-m32u0i4i5oltjfj4flt8q47314f3ppq8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

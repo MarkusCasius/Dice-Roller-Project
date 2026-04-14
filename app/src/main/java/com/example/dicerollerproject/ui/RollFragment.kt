@@ -1,6 +1,5 @@
 package com.example.dicerollerproject.ui
 
-import android.media.Image
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,7 +12,7 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.RadioButton
+import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.core.view.children
@@ -61,7 +60,6 @@ class RollFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_roll, container, false)
     }
 
@@ -71,7 +69,7 @@ class RollFragment : Fragment() {
         spinnerSavedRules?.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if (position == 0) {
-                    // "Manual Roll" selected: Enable everything and clear
+                    // Manual Roll selected: Enable everything and clear
                     setManualModifiersEnabled(true)
                     clearInputs()
                 } else {
@@ -85,23 +83,16 @@ class RollFragment : Fragment() {
         }
 
         store = LocalStore(requireContext())
-        val textColor = store.getTextColor()
-        val elementColor = store.getElementColor()
-
-        // Apply to Text
-        view.findViewById<TextView>(R.id.textView).setTextColor(textColor)
-
-        // Apply to Buttons
-        val rollBtn = view.findViewById<Button>(R.id.buttonRoll)
-        rollBtn.setBackgroundColor(elementColor)
-
-        val clearBtn = view.findViewById<Button>(R.id.buttonClear)
-        clearBtn.setBackgroundColor(elementColor)
-
-        applyGlobalColors(view as ViewGroup, textColor, elementColor)
+        applyStoreStyles(requireView())
 
 
-        // Find all the UI components by their ID
+        // Help Guide
+        val helpOverlay = view.findViewById<View>(R.id.helpOverlay)
+        val btnHelp = view.findViewById<View>(R.id.btnHelp) // Ensure you have btnHelp in RollFragment header too
+        val btnCloseHelp = view.findViewById<Button>(R.id.btnCloseHelp)
+        btnHelp?.setOnClickListener { helpOverlay.visibility = View.VISIBLE }
+        btnCloseHelp?.setOnClickListener { helpOverlay.visibility = View.GONE }
+        // Rest of UI Components
         editTextReroll = view.findViewById(R.id.editTextReroll)
         editTextFlat = view.findViewById<EditText>(R.id.editTextFlat)
         checkBoxKeepHighest = view.findViewById(R.id.checkBoxKeepHighest)
@@ -113,7 +104,8 @@ class RollFragment : Fragment() {
         textView = view.findViewById<TextView>(R.id.textView)
         spinnerSavedRules = view.findViewById<Spinner>(R.id.spinnerSavedRules)
         tray = view.findViewById<ViewGroup>(R.id.diceTrayContainer)
-        buttonHistory = view.findViewById<ImageButton>(R.id.btnHistory)
+        buttonHistory = view.findViewById(R.id.btnHistory)
+        buttonHistory?.setOnClickListener { showHistoryBottomSheet() }
 
         checkBoxKeepHighest?.setOnCheckedChangeListener { _, isChecked ->
             editTextKeepHighest?.isEnabled = isChecked
@@ -135,13 +127,20 @@ class RollFragment : Fragment() {
             showHistoryBottomSheet()
         }
 
+        buttonRoll?.setOnClickListener {
+            rollDice()
+        }
+
+        buttonClear?.setOnClickListener {
+            clearInputs()
+        }
+
         val btnAdd = view.findViewById<Button>(R.id.btnAddDiceRow)
         btnAdd.setOnClickListener {
             addDiceRow()
         }
 
         // Set up the Spinners with standard dice types
-        // An ArrayAdapter is used to adapt the Dice.Standard enum values to be displayed in the Spinner
         val adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_item,
@@ -153,20 +152,16 @@ class RollFragment : Fragment() {
         // Populate the spinner with saved rules
         refreshRules()
 
-        // Set an OnClickListener for the roll button
-        buttonRoll?.setOnClickListener { rollDice() }
-        buttonClear?.setOnClickListener { clearInputs() }
     }
 
+    /**
+     * Refreshes the saved rules spinner
+     */
     private fun refreshRules() {
         savedRules = store.listRules() ?: mutableListOf()
 
         val ruleNames = mutableListOf("Manual Roll (No Rule)")
         ruleNames.addAll(savedRules.map { it?.name ?: "Unnamed Rule" })
-
-//        for (r in savedRules!!) {
-//            ruleNames.add(r.name)
-//        }
 
         val adapter = ArrayAdapter<String>(
             requireContext(),
@@ -176,6 +171,11 @@ class RollFragment : Fragment() {
         spinnerSavedRules?.adapter = adapter
     }
 
+    /**
+     * Adds a new row to the dice container
+     * @param dieType Type of die to add
+     * @param count Number of dice to add
+     */
     private fun addDiceRow(dieType: String? = null, count: Int = 1) {
         val container = view?.findViewById<LinearLayout>(R.id.layoutDiceContainer) ?: return
         val row = layoutInflater.inflate(R.layout.item_dice_row, container, false)
@@ -200,13 +200,16 @@ class RollFragment : Fragment() {
         container.addView(row)
     }
 
+    /**
+     * Rolls the dice and displays the result
+     */
     private fun rollDice() {
         val selectedRuleIndex = spinnerSavedRules?.selectedItemPosition ?: 0
         val specs = mutableListOf<RollSpec>()
         val modifier: Modifier = Modifier.Companion.none()
 
         val result: RollResult = if (selectedRuleIndex > 0) {
-            // --- SAVED RULE SELECTED ---
+            // Saved Rule
             val selectedRule = savedRules.get(selectedRuleIndex - 1)
             val allCustomDice = store.listCustomDice()
 
@@ -214,7 +217,7 @@ class RollFragment : Fragment() {
             val prepared = RuleMapper.prepare(selectedRule, allCustomDice)
             diceEngine!!.roll(prepared.specs, prepared.mod)
         } else {
-            // --- MANUAL ROLL SELECTED ---
+            // Manual roll
             // Get the selected die type from the spinner
             val container = view?.findViewById<LinearLayout>(R.id.layoutDiceContainer)
 
@@ -242,7 +245,6 @@ class RollFragment : Fragment() {
                 totalNumDice = 1
             }
             // Create the RollSpec based on the die type and count
-            // val spec = RollSpec(Dice.Companion.standard(selectedDie), numDice)
 
             // Get the flat modifier, defaulting to 0 if empty
             val flatModStr = editTextFlat!!.getText().toString()
@@ -289,7 +291,7 @@ class RollFragment : Fragment() {
             }
 
             // Create the Modifier object
-            modifier.flat = flatMod
+            modifier.flatBonus = flatMod
             modifier.keepHighest = keepHigh
             modifier.keepLowest = keepLow
 
@@ -300,20 +302,23 @@ class RollFragment : Fragment() {
         val description = if (selectedRuleIndex > 0) {
             savedRules[selectedRuleIndex - 1]?.name ?: "Unnamed Rule"
         } else {
-            // For manual rolls, get the specs from the loop logic
-            // (You'll need to make 'specs' accessible here)
             getDiceDescription(specs)
         }
 
         triggerVisualRoll(result)
 
+        view?.findViewById<ScrollView>(R.id.scrollDice)?.post {
+            view?.findViewById<ScrollView>(R.id.scrollDice)?.smoothScrollTo(0, 0)
+        }
+
+        // Save to history
         val historyItem = RollHistoryItem(
             id = UUID.randomUUID().toString(),
             timestamp = System.currentTimeMillis(),
             diceDescription = description,
             results = result.facesRolled.toString(),
             total = result.total,
-            modifierLabel = "Mod: ${modifier.flat}"
+            modifierLabel = "Mod: ${modifier.flatBonus}"
         )
 
         val history = store.listHistory()
@@ -326,33 +331,22 @@ class RollFragment : Fragment() {
         }, 1000)
     }
 
-    private fun applyGlobalColors(viewGroup: ViewGroup, txtCol: Int, elemCol: Int) {
-        for (i in 0 until viewGroup.childCount) {
-            val child = viewGroup.getChildAt(i)
-            if (child is TextView && child !is Button) {
-                child.setTextColor(txtCol)
-            } else if (child is Button) {
-                child.setBackgroundColor(elemCol)
-            } else if (child is ViewGroup) {
-                applyGlobalColors(child, txtCol, elemCol)
-            }
-        }
-    }
-
-    // For altering whether manual modifiers are enabled
+    /**
+     * Enables or disables manual modifier inputs
+     */
     private fun setManualModifiersEnabled(enabled: Boolean) {
         editTextReroll?.isEnabled = enabled
         editTextFlat?.isEnabled = enabled
         checkBoxKeepHighest?.isEnabled = enabled
         checkBoxKeepLowest?.isEnabled = enabled
-        // Also disable the "Add Dice" button because Rules have fixed dice
         view?.findViewById<Button>(R.id.btnAddDiceRow)?.isEnabled = enabled
-
-        // If disabled, maybe change alpha to look "grayed out"
         val alpha = if (enabled) 1.0f else 0.5f
         view?.findViewById<View>(R.id.modifierGrid)?.alpha = alpha
     }
 
+    /**
+     * Applies a rule to the UI
+     */
     private fun applyRuleToUI(rule: Rule?) {
         rule?.let {
             editTextFlat?.setText(it.flat.toString())
@@ -375,15 +369,18 @@ class RollFragment : Fragment() {
         }
     }
 
+    /**
+     * Triggers the animation of the dice being rolled.
+     */
     private fun triggerVisualRoll(result: RollResult) {
         val tray = view?.findViewById<ViewGroup>(R.id.diceTrayContainer) ?: return
         val rollId = System.currentTimeMillis()
         val viewsFromThisRoll = mutableListOf<View>()
         val animSpeed = store.getAnimSpeed()
 
-        // Filter for standard dice only and limit to 10
+        // Filter for standard dice only and limit to 20
         val totalRolls = result.numericContributions.size
-        val displayLimit = 10
+        val displayLimit = 20
 
         for (i in 0 until minOf(totalRolls, displayLimit)) {
             val value = result.numericContributions[i]
@@ -410,9 +407,13 @@ class RollFragment : Fragment() {
             diceContainer.addView(resultLabel)
 
             // Randomize position
-            val containerParams = FrameLayout.LayoutParams(120, 120)
-            containerParams.leftMargin = (50..maxOf(50, tray.width - 150)).random()
-            containerParams.topMargin = (50..maxOf(50, tray.height - 150)).random()
+            val containerParams = FrameLayout.LayoutParams(110, 110)
+            // Horizontal: Stay away from edges
+            containerParams.leftMargin = (60..maxOf(60, tray.width - 160)).random()
+            // Vertical: Avoid the top 60dp (buttons) and bottom 100dp (card area)
+            val minY = 70
+            val maxY = maxOf(minY + 10, tray.height - 220)
+            containerParams.topMargin = (minY..maxY).random()
             diceContainer.layoutParams = containerParams
             tray.addView(diceContainer)
             viewsFromThisRoll.add(diceContainer)
@@ -458,7 +459,9 @@ class RollFragment : Fragment() {
         }
     }
 
-    // Helper to map numeric result to a drawable resource
+    /**
+     * Helper to map numeric result to a drawable resource
+     */
     private fun getDiceDrawable(value: Int): Int {
         return when(value) {
             1 -> R.drawable.dice_1
@@ -471,6 +474,9 @@ class RollFragment : Fragment() {
         }
     }
 
+    /**
+     * Get's the dice description for history
+     */
     private fun getDiceDescription(specs: List<RollSpec>): String {
         return specs.joinToString(", ") { spec ->
             val name = if (spec.die.isStandard) "D${spec.die.sides()}" else "Custom"
@@ -478,6 +484,9 @@ class RollFragment : Fragment() {
         }
     }
 
+    /**
+     * Clears all inputs
+     */
     private fun clearInputs() {
         editTextFlat?.setText("")
         editTextReroll?.setText("")
@@ -495,10 +504,61 @@ class RollFragment : Fragment() {
         tray?.removeAllViews()
     }
 
+    /**
+     * Shows the history bottom sheet
+     */
     private fun showHistoryBottomSheet() {
         val bottomSheet = RollHistoryBottomSheet()
         bottomSheet.show(parentFragmentManager, "RollHistory")
     }
-}
 
-private fun MutableList<String>.add(element: String?) {}
+    /**
+     * Changes the button, text and background colours of the fragment
+     */
+    private fun applyStoreStyles(rootView: View) {
+        val store = LocalStore(requireContext())
+        val bgColour = store.getBackgroundColour()
+        val txtColour = store.getTextColour()
+        val btnColour = store.getButtonColour()
+
+        // 1. Set the background of the fragment root itself
+        rootView.setBackgroundColor(bgColour)
+
+        // 2. Recursively apply colors to children
+        if (rootView is ViewGroup) {
+            applyRecursiveStyles(rootView, txtColour, btnColour)
+        }
+    }
+
+    /**
+     * Recursively applies colors to children of a ViewGroup
+     */
+    private fun applyRecursiveStyles(viewGroup: ViewGroup, txtCol: Int, btnCol: Int) {
+        for (i in 0 until viewGroup.childCount) {
+            val child = viewGroup.getChildAt(i)
+
+            when (child) {
+                is Button -> {
+                    child.setBackgroundColor(btnCol)
+                    child.setTextColor(android.graphics.Color.WHITE) // High contrast for buttons
+                }
+                is TextView -> {
+                    child.setTextColor(txtCol)
+                }
+                is com.google.android.material.textfield.TextInputLayout -> {
+                    child.defaultHintTextColor = android.content.res.ColorStateList.valueOf(txtCol)
+                    // Handle the nested EditText inside TextInputLayout
+                    val editText = child.editText
+                    editText?.setTextColor(txtCol)
+                    editText?.setHintTextColor(txtCol)
+                }
+                is ViewGroup -> {
+                    // Gestalt: Enclosure - Keep Cards white or a slightly lighter/darker shade
+                    // than BG to maintain grouping, or let them take the BG color.
+                    // For now, we continue recursion
+                    applyRecursiveStyles(child, txtCol, btnCol)
+                }
+            }
+        }
+    }
+}

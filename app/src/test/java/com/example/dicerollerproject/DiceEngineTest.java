@@ -32,7 +32,7 @@ public class DiceEngineTest {
     List<RollSpec> specs = Collections.singletonList(new RollSpec(Dice.standard(Dice.Standard.D6), 1));
 
     Modifier mPlus = Modifier.none();
-    mPlus.setFlat(5);
+    mPlus.setFlatBonus(5);
     assertEquals(9, eng.roll(specs, mPlus).total); // 4 + 5
   }
 
@@ -43,7 +43,7 @@ public class DiceEngineTest {
     List<RollSpec> specs = Collections.singletonList(new RollSpec(Dice.standard(Dice.Standard.D6), 1));
 
     Modifier mMinus = Modifier.none();
-    mMinus.setFlat(-2);
+    mMinus.setFlatBonus(-2);
     assertEquals(2, eng.roll(specs, mMinus).total); // 4 - 2
   }
 
@@ -85,7 +85,7 @@ public class DiceEngineTest {
     RollResult r1 = eng.roll(specs, mNone);
 
     Modifier mReroll = Modifier.none();
-    mReroll.rerollOnesOnce = true;
+    mReroll.getRerollValues().add(1);
     RollResult r2 = eng.roll(specs, mReroll);
 
     assertTrue("Reroll should generally increase the total", r2.total > r1.total);
