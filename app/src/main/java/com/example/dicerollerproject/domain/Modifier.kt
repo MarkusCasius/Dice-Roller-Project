@@ -3,9 +3,10 @@ package com.example.dicerollerproject.domain
 /**Defines modifications to apply to dice rolls.
  * Includes flat bonuses, keeping highest/lowest rolls, and rules for rerolling  */
 class Modifier {
-    // Constant value added or subtracted from total sum
+    /**
+     * Flat bonus to apply to the total.
+     */
     var flatBonus: Int = 0 // +/- constant
-
 
     /** Highest Dice to keep. If null, rule isn't applied.  */
     @JvmField

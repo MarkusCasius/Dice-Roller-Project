@@ -10,30 +10,35 @@
         android:id="@+id/diceTrayContainer"
         android:layout_width="match_parent"
         android:layout_height="260dp"
-        android:elevation="0dp"
         android:background="#10000000"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:elevation="0dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+    </FrameLayout>
 
     <ImageButton
         android:id="@+id/btnHistory"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_margin="8dp"
+        android:layout_marginTop="268dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:src="@android:drawable/ic_menu_recent_history"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/diceTrayContainer" />
 
     <ImageButton
         android:id="@+id/btnHelp"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_margin="8dp"
+        android:layout_marginEnd="16dp"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@android:drawable/ic_menu_help"
         android:elevation="5dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:src="@android:drawable/ic_menu_help"
+        app:layout_constraintEnd_toEndOf="@+id/diceTrayContainer"
+        app:layout_constraintTop_toBottomOf="@+id/btnHistory"
+        app:tint="@color/design_default_color_primary" />
 
     <!-- Result Card (Heuristic: Visibility of System Status) -->
     <com.google.android.material.card.MaterialCardView

@@ -33,6 +33,8 @@ import org.junit.runner.RunWith
         // Perform Roll
         onView(withId(R.id.buttonRoll)).perform(click())
 
+        Thread.sleep(4000)
+
         // Check if output text changed from default
         onView(withId(R.id.textView)).check(matches(withText(containsString("Result:"))))
     }

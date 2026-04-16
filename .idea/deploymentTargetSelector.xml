@@ -5,16 +5,10 @@
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="CreateFragmentTest">
+      <SelectionState runConfigName="Tests in 'com.example.dicerollerproject'">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="RollFragmentTest">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
-      <SelectionState runConfigName="testKeepHighestToggle()">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
-      <SelectionState runConfigName="SimulateFragmentTest">
+      <SelectionState runConfigName="testManualRollLogic()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

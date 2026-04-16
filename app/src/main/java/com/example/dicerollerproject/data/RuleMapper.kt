@@ -10,6 +10,11 @@ import com.example.dicerollerproject.domain.RollSpec
  * Mapper used to create a Rules by combining dice and rules.
  */
 object RuleMapper {
+    /**
+     * Prepares a Rule for use in the DiceEngine.
+     * @param rule The Rule to prepare.
+     * @param allDice A list of all custom dice.
+     */
     fun prepare(rule: Rule?, allDice: MutableList<CustomDie?>?): Prepared {
         val specs = mutableListOf<RollSpec>()
 
@@ -29,6 +34,7 @@ object RuleMapper {
                 keepHighest = mod.keepHighest
                 keepLowest = mod.keepLowest
 
+                // For separating inputs to verify whether its a string or numeric range.
                 mod.rerollString?.let { input ->
                     if (input.isNotEmpty()) {
                         val parts = input.split(",").map { it.trim() }
@@ -53,6 +59,11 @@ object RuleMapper {
         return Prepared(specs, m)
     }
 
+    /**
+     * Finds a custom die by ID.
+     * @param dice List of custom dice.
+     * @param id ID of the custom die to find.
+     */
     private fun findById(dice: List<CustomDie?>, id: String?): CustomDie {
         return dice.filterNotNull().find { it.id == id }
             ?: throw IllegalArgumentException("Custom die not found: $id")
