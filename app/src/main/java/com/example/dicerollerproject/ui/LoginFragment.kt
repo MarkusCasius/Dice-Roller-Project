@@ -84,7 +84,6 @@ class LoginFragment : Fragment() {
      * Firebase Authentication Integration - Registration
      */
     private fun registerUser() {
-        // Toast.makeText(context, "Button pressed", Toast.LENGTH_SHORT).show()
         val email = emailField?.text.toString().trim()
         val password = passwordField?.text.toString().trim()
 
@@ -96,6 +95,7 @@ class LoginFragment : Fragment() {
                 proceedToApp()
             } else {
                 Log.d("LoginFragment", "Registration Failed: ${task.exception?.message}")
+                Toast.makeText(context, "Registration Failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
             }
         }
     }

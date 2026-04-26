@@ -50,7 +50,7 @@ class CreateFragment : Fragment() {
 
         // Help Guide
         val helpOverlay = view.findViewById<View>(R.id.helpOverlay)
-        val btnHelp = view.findViewById<View>(R.id.btnHelp) // Ensure you have btnHelp in RollFragment header too
+        val btnHelp = view.findViewById<View>(R.id.btnHelp)
         val btnCloseHelp = view.findViewById<Button>(R.id.btnCloseHelp)
         btnHelp?.setOnClickListener { helpOverlay.visibility = View.VISIBLE }
         btnCloseHelp?.setOnClickListener { helpOverlay.visibility = View.GONE }

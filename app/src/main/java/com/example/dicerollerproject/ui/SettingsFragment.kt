@@ -395,8 +395,11 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
     private fun writeRulesToUri(uri: Uri) {
         try {
-            val rules = store.listRules()
-            val jsonString = gson.toJson(rules)
+            val backup = FullBackup(
+                dice = store.listCustomDice(),
+                rules = store.listRules()
+            )
+            val jsonString = gson.toJson(backup)
 
             requireContext().contentResolver.openOutputStream(uri)?.use { outputStream ->
                 outputStream.write(jsonString.toByteArray())
@@ -415,29 +418,31 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
                 val jsonElement = com.google.gson.JsonParser.parseString(jsonString)
                 if (jsonElement.isJsonArray) {
-                    // --- CASE 1: ENTIRE SAVE (List of Rules) ---
+                    // Rule Backup
                     val type = object : TypeToken<MutableList<Rule?>>() {}.type
                     val importedRules: MutableList<Rule?> = gson.fromJson(jsonString, type)
                     importRulesList(importedRules)
                 }
-                else if (jsonElement.isJsonObject) {
-                    val jsonObject = jsonElement.asJsonObject
+                val jsonObject = jsonElement.asJsonObject
 
-                    if (jsonObject.has("faces")) {
-                        // --- CASE 2: SINGLE CUSTOM DIE ---
+                when {
+                    // Full Backup
+                    jsonObject.has("dice") && jsonObject.has("rules") -> {
+                        val backup = gson.fromJson(jsonString, FullBackup::class.java)
+                        backup.dice.filterNotNull().forEach { importSingleDie(it) }
+                        importRulesList(backup.rules.toMutableList())
+                        Toast.makeText(context, "Full backup imported!", Toast.LENGTH_SHORT).show()
+                    }
+                    jsonObject.has("faces") -> {
                         val importedDie = gson.fromJson(jsonString, CustomDie::class.java)
                         importSingleDie(importedDie)
                     }
-                    else if (jsonObject.has("components")) {
-                        // --- CASE 3: SINGLE RULE ---
+                    jsonObject.has("components") -> {
                         val importedRule = gson.fromJson(jsonString, Rule::class.java)
                         importRulesList(mutableListOf(importedRule))
                     }
-                    else {
-                        throw IllegalArgumentException("Unknown JSON format")
-                    }
+                    else -> throw IllegalArgumentException("Unknown format")
                 }
-
                 refreshManagementLists()
             }
         } catch (e: Exception) {
@@ -469,3 +474,8 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         }
     }
 }
+
+private data class FullBackup(
+    val dice: List<CustomDie?>,
+    val rules: List<Rule?>
+)

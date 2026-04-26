@@ -6,11 +6,6 @@ import java.util.Random
  * Logic engine for rolling dice, taking specifications and modifiers to produce a result
  */
 class DiceEngine(seed: Long?) {
-    /**
-     * Constructs a new DiceEngine
-     * @param seed A seed for random number generation for deterministic testing
-     * If null, a new random object is created without a fixed seed.
-     */
     private val rng: Random = if (seed == null) Random() else Random(seed)
 
     /**
@@ -69,7 +64,6 @@ class DiceEngine(seed: Long?) {
             indices = indices.take(mod.keepLowest!!).toMutableList()
         }
 
-        // Calculates sum based on dice kept.
         var sum = 0
         if (mod.keepHighest != null || mod.keepLowest != null) {
             val keepSet = indices.toSet()
@@ -91,7 +85,6 @@ class DiceEngine(seed: Long?) {
      * @return The final face string after the roll and any rerolls.
      */
     private fun rollOneFace(die: Dice, mod: Modifier): String? {
-        // Performs base roll
         val idx = rollIndex(die.sides())
         var face = die.faceAtIndex(idx)
         val numeric = parseNumeric(face)

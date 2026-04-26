@@ -398,7 +398,7 @@ class RollFragment : Fragment() {
 
             val resultLabel = TextView(requireContext()).apply {
                 text = faceText
-                setTextColor(android.graphics.Color.BLACK) // Or use your store color
+                setTextColor(android.graphics.Color.BLACK)
                 textSize = 14f
                 gravity = android.view.Gravity.CENTER
                 visibility = View.INVISIBLE // Hide during animation
@@ -419,13 +419,13 @@ class RollFragment : Fragment() {
             viewsFromThisRoll.add(diceContainer)
 
             if (animSpeed == 0.0f) {
-                // --- INSTANT MODE ---
+                // Instant Mode
                 diceView.setImageResource(getDiceDrawable(value))
                 if (value > 6 || value == 0) {
                     resultLabel.visibility = View.VISIBLE
                 }
             } else {
-                // --- ANIMATED MODE ---
+                // Animated mode
                 val baseDuration = (600 + (i * 150)).toLong()
                 val scaledDuration = (baseDuration * animSpeed).toLong()
 
@@ -521,10 +521,10 @@ class RollFragment : Fragment() {
         val txtColour = store.getTextColour()
         val btnColour = store.getButtonColour()
 
-        // 1. Set the background of the fragment root itself
+        // Set the background of the fragment root itself
         rootView.setBackgroundColor(bgColour)
 
-        // 2. Recursively apply colors to children
+        // Recursively apply colors to children
         if (rootView is ViewGroup) {
             applyRecursiveStyles(rootView, txtColour, btnColour)
         }
@@ -547,15 +547,11 @@ class RollFragment : Fragment() {
                 }
                 is com.google.android.material.textfield.TextInputLayout -> {
                     child.defaultHintTextColor = android.content.res.ColorStateList.valueOf(txtCol)
-                    // Handle the nested EditText inside TextInputLayout
                     val editText = child.editText
                     editText?.setTextColor(txtCol)
                     editText?.setHintTextColor(txtCol)
                 }
                 is ViewGroup -> {
-                    // Gestalt: Enclosure - Keep Cards white or a slightly lighter/darker shade
-                    // than BG to maintain grouping, or let them take the BG color.
-                    // For now, we continue recursion
                     applyRecursiveStyles(child, txtCol, btnCol)
                 }
             }
