@@ -84,7 +84,7 @@ class LoginFragment : Fragment() {
      * Firebase Authentication Integration - Registration
      */
     private fun registerUser() {
-        Toast.makeText(context, "Button pressed", Toast.LENGTH_SHORT).show()
+        // Toast.makeText(context, "Button pressed", Toast.LENGTH_SHORT).show()
         val email = emailField?.text.toString().trim()
         val password = passwordField?.text.toString().trim()
 
@@ -105,24 +105,24 @@ class LoginFragment : Fragment() {
      * Upserts the user into the PostgreSQL 'User' table
      */
     private fun syncUserProfile(user: FirebaseUser?) {
-//        user?.let { firebaseUser ->
-//            // Sync to Data Connect (Postgres)
-//            val connector = DicerollerConnector.instance
-//
-//            viewLifecycleOwner.lifecycleScope.launch {
-//                try {
-//                    connector.upsertUser.execute(
-//                        displayName = firebaseUser.displayName ?: "New User"
-//                    ) {
-//                        this.email = firebaseUser.email
-//                        this.photoUrl = firebaseUser.photoUrl?.toString()
-//                    }
-//                    Log.d("LoginFragment", "Data Connect User Synced")
-//                } catch (e: Exception) {
-//                    Log.e("LoginFragment", "Data Connect Sync Failed: ${e.message}")
-//                }
-//            }
-//        }
+        user?.let { firebaseUser ->
+            // Sync to Data Connect (Postgres)
+            val connector = DicerollerConnector.instance
+
+            viewLifecycleOwner.lifecycleScope.launch {
+                try {
+                    connector.upsertUser.execute(
+                        displayName = firebaseUser.displayName ?: "New User"
+                    ) {
+                        this.email = firebaseUser.email
+                        this.photoUrl = firebaseUser.photoUrl?.toString()
+                    }
+                    Log.d("LoginFragment", "Data Connect User Synced")
+                } catch (e: Exception) {
+                    Log.e("LoginFragment", "Data Connect Sync Failed: ${e.message}")
+                }
+            }
+        }
     }
 
      fun proceedToApp() {

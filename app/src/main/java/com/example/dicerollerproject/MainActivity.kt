@@ -8,11 +8,15 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI.setupWithNavController
 import com.example.dicerollerproject.data.LocalStore
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.firebase.dataconnect.generated.DicerollerConnector
+import com.google.firebase.dataconnect.generated.instance
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        val connector = DicerollerConnector.instance
+        connector.dataConnect.useEmulator("10.0.2.2", 9394)
 
         val root = findViewById<androidx.constraintlayout.widget.ConstraintLayout>(R.id.MainActivity)
         ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->

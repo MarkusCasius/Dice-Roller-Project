@@ -21,6 +21,7 @@ import com.example.dicerollerproject.R
 import com.example.dicerollerproject.data.LocalStore
 import com.example.dicerollerproject.data.model.CustomDie
 import com.example.dicerollerproject.data.model.Rule
+import com.example.dicerollerproject.domain.Dice
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.dataconnect.generated.DicerollerConnector
@@ -166,66 +167,62 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                throw Exception("Sync Error")
-//                // 1. Sync User Profile
-//                connector.upsertUser.execute(user.displayName ?: "Anonymous") {
-//                    email = user.email
-//                    photoUrl = user.photoUrl?.toString()
-//                }
-//
-//                // 2. Sync Dice
-//                localDice.forEach { die ->
-//                    val dieId = die.id ?: return@forEach
-//                    connector.upsertDie.execute(UUID.fromString(dieId), die.name ?: "Unnamed") {
-//                        faces = die.faces?.filterNotNull() ?: emptyList()
-//                    }
-//                }
-//
-//                // 3. Sync Rules
-//                localRules.forEach { rule ->
-//                    val ruleId = rule.id ?: return@forEach
-//                    val (nums, faces) = parseRerollForCloud(rule.modifier?.rerollString)
-//                    val ruleUuid = UUID.fromString(ruleId)
-//
-//                    // Create a deterministic UUID for the modifier based on the Rule ID
-//                    val modifierUuid = UUID.nameUUIDFromBytes(ruleId.toByteArray())
-//
-//                    // A. Sync Modifier
-//                    // id and name are mandatory, others are optional
-//                    connector.upsertModifier.execute(modifierUuid, "${rule.name} Modifier") {
-//                        flat = rule.modifier?.flatBonus // If 'flatBonus' is an unresolved reference, your local 'Modifier' data class is missing this property. Please update your local data model.
-//                        keepH = rule.modifier?.keepHighest
-//                        keepL = rule.modifier?.keepLowest
-//                        rerollV = nums
-//                        rerollF = faces
-//                    }
-//
-//                    // B. Sync Rule
-//                    // id and name are mandatory, desc and modifierId are optional
-//                    connector.upsertRule.execute(ruleUuid, rule.name ?: "Unnamed Rule") {
-//                        desc = rule.description // If 'description' is an unresolved reference, your local 'Rule' data class is missing this property. Please update your local data model.
-//                        modifierId = modifierUuid
-//                    }
-//
-//                    // C. Sync Components (Dice links)
-//                    // Delete existing components first to avoid duplicates
-//                    connector.deleteRuleComponents.execute(ruleUuid)
-//
-//                    rule.components?.filterNotNull()?.forEach { comp ->
-//                        comp.customDieId?.let { customId ->
-//                            // All parameters in UpsertComponent are mandatory (!)
-//                            // therefore NO builder block is used.
-//                            connector.upsertComponent.execute(
-//                                UUID.randomUUID(),
-//                                ruleUuid,
-//                                UUID.fromString(customId),
-//                                comp.count
-//                            )
-//                        }
-//                    }
-//                }
-//
-//                Toast.makeText(context, "Cloud Sync Complete!", Toast.LENGTH_SHORT).show()
+                // Sync User Profile
+                connector.upsertUser.execute(user.displayName ?: "Anonymous") {
+                    email = user.email
+                    photoUrl = user.photoUrl?.toString()
+                }
+
+                // Sync Dice
+                localDice.forEach { die ->
+                    val dieId = die.id ?: return@forEach
+                    connector.upsertDie.execute(UUID.fromString(dieId), die.name ?: "Unnamed") {
+                        faces = die.faces?.filterNotNull() ?: emptyList()
+                    }
+                }
+
+                // Sync Rules
+                localRules.forEach { rule ->
+                    val ruleId = rule.id ?: return@forEach
+                    val (nums, faces) = parseRerollForCloud(rule.modifier?.rerollString)
+                    val ruleUuid = UUID.fromString(ruleId)
+
+                    // Create a deterministic UUID for the modifier based on the Rule ID
+                    val modifierUuid = UUID.nameUUIDFromBytes(ruleId.toByteArray())
+
+                    // Sync Modifier
+                    connector.upsertModifier.execute(modifierUuid, "${rule.name} Modifier") {
+                        flat = rule.modifier?.flatBonus
+                        keepH = rule.modifier?.keepHighest
+                        keepL = rule.modifier?.keepLowest
+                        rerollV = nums
+                        rerollF = faces
+                    }
+
+                    // Sync Rule
+                    connector.upsertRule.execute(ruleUuid, rule.name ?: "Unnamed Rule") {
+                        desc = rule.description
+                        modifierId = modifierUuid
+                    }
+
+                    // Sync Components (Dice links)
+                    connector.deleteRuleComponents.execute(ruleUuid)
+
+                    rule.components?.filterNotNull()?.forEach { comp ->
+                        comp.customDieId?.let { customId ->
+                            // All parameters in UpsertComponent are mandatory (!)
+                            // therefore NO builder block is used.
+                            connector.upsertComponent.execute(
+                                UUID.randomUUID(),
+                                ruleUuid,
+                                UUID.fromString(customId),
+                                comp.count
+                            )
+                        }
+                    }
+                }
+
+                Toast.makeText(context, "Cloud Sync Complete!", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Log.e("SyncError", "Sync failed: ${e.message}", e)
                 Toast.makeText(context, "Sync Failed: ${e.message}", Toast.LENGTH_LONG).show()

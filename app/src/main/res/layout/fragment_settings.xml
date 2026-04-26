@@ -117,14 +117,26 @@
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                         android:text="Appearance" android:textStyle="bold" android:layout_marginBottom="12dp"/>
 
-                    <Button android:id="@+id/btnPickBg" android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:text="Change Background Color" style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+                    <Button
+                        android:id="@+id/btnPickBg"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Change Background Colour" />
 
-                    <Button android:id="@+id/btnPickBtn" android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:text="Change Button Color" style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+                    <Button
+                        android:id="@+id/btnPickBtn"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Change Button Colour" />
 
-                    <Button android:id="@+id/btnPickTxt" android:layout_width="match_parent" android:layout_height="wrap_content"
-                        android:text="Change Text Color" style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+                    <Button
+                        android:id="@+id/btnPickTxt"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Change Text Colour" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -142,8 +154,22 @@
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                         android:text="Roll Animation Speed" android:textStyle="bold" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="8dp">
-                        <Button android:id="@+id/btnAnimNormal" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Normal" />
-                        <Button android:id="@+id/btnAnimFast" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Fast" />
+
+                        <Button
+                            android:id="@+id/btnAnimNormal"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginRight="4dp"
+                            android:layout_weight="1"
+                            android:text="Normal" />
+
+                        <Button
+                            android:id="@+id/btnAnimFast"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="4dp"
+                            android:layout_weight="1"
+                            android:text="Fast" />
                         <Button android:id="@+id/btnAnimInstant" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="None" />
                     </LinearLayout>
                 </LinearLayout>

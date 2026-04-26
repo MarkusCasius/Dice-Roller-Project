@@ -2,44 +2,54 @@ package com.example.dicerollerproject.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
 import com.example.dicerollerproject.data.model.CustomDie
 import com.example.dicerollerproject.data.model.RollHistoryItem
 import com.example.dicerollerproject.data.model.Rule
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 import java.util.UUID
 
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "dice_store")
+
+
 /**
- * Handles local persistence of custom dice and rules using SharedPreferences and GSON.
+ * Handles local persistence of custom dice and rules using Jetpack Datastore and GSON.
  */
-class LocalStore(context: Context) {
-    private val prefs: SharedPreferences
-    private val gson: Gson
-    private val keyElementColour = "bg_color"
-    private val keyButtonColour = "btn_color"
-    private val keyTextColour = "text_color"
-    private val keyHistory = "roll_history"
-    private val keyAnimationSpeed = "anim_speed"
+class LocalStore(private val context: Context) {
+    private val gson = Gson()
+    companion object {
+        private val KEY_CUSTOM_DICE = stringPreferencesKey("customDiceJson")
+        private val KEY_CUSTOM_RULES = stringPreferencesKey("customRulesJson")
+        private val KEY_BG_COLOR = intPreferencesKey("bg_color")
+        private val KEY_BTN_COLOR = intPreferencesKey("btn_color")
+        private val KEY_TXT_COLOR = intPreferencesKey("text_color")
+        private val KEY_HISTORY = stringPreferencesKey("roll_history")
+        private val KEY_ANIM_SPEED = floatPreferencesKey("anim_speed")
+    }
 
 
     init {
-        this.prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        this.gson = Gson()
-
-        // Seeds initial rules/dice
-        if (listRules().isEmpty()) {
-            seedInitialData()
+        runBlocking {
+            if (listRules().isEmpty()) {
+                seedInitialData()
+            }
         }
     }
 
-    /**
-     * Seeds the initial data for first-time users.
-     */
-    private fun seedInitialData() {
+    private suspend fun seedInitialData() {
         val initialDice = mutableListOf<CustomDie?>()
         val initialRules = mutableListOf<Rule?>()
 
-        // Create the Confusion Die faces
         val confusionDieId = UUID.randomUUID().toString()
         val confusionDie = CustomDie(
             confusionDieId,
@@ -48,146 +58,107 @@ class LocalStore(context: Context) {
         )
         initialDice.add(confusionDie)
 
-        // Create "Advantage" Rule: 2d20, Keep Highest 1
-        initialRules.add(Rule(
-            UUID.randomUUID().toString(),
-            "Advantage",
+        initialRules.add(Rule(UUID.randomUUID().toString(), "Advantage",
             mutableListOf(Rule.RuleComponent(true, "D20", null, 2)),
-            Rule.RuleModifier(1, null, null, null),
-            0,
-            null
+            Rule.RuleModifier(1, null, null, null), 0, null))
 
-        ))
-
-        // Create "Fireball" Rule: 5d6
-        initialRules.add(Rule(
-            UUID.randomUUID().toString(),
-            "Fireball",
+        initialRules.add(Rule(UUID.randomUUID().toString(), "Fireball",
             mutableListOf(Rule.RuleComponent(true, "D6", null, 5)),
-            Rule.RuleModifier(null, null, null, null),
-            0,
-            null
-        ))
+            Rule.RuleModifier(null, null, null, null), 0, null))
 
-        // Create "Confusion" Rule: 1x Confusion Die
-        initialRules.add(Rule(
-            UUID.randomUUID().toString(),
-            "Confusion",
+        initialRules.add(Rule(UUID.randomUUID().toString(), "Confusion",
             mutableListOf(Rule.RuleComponent(false, null, confusionDieId, 1)),
-            Rule.RuleModifier(null, null, null, null),
-            0,
-            null
-        ))
+            Rule.RuleModifier(null, null, null, null), 0, null))
 
-        // Save everything to SharedPreferences
         saveCustomDice(initialDice)
         saveRules(initialRules)
     }
 
-    // For updating the colour options
-    fun saveBackgroundColour(color: Int) = prefs.edit().putInt(keyElementColour, color).apply()
-    fun getBackgroundColour(): Int = prefs.getInt(keyElementColour, android.graphics.Color.parseColor("#F5F5F5"))
+    // --- Colour Themes ---
 
-    fun saveButtonColour(color: Int) = prefs.edit().putInt(keyButtonColour, color).apply()
-    fun getButtonColour(): Int = prefs.getInt(keyButtonColour, android.graphics.Color.parseColor("#6200EE"))
+    fun saveBackgroundColour(color: Int) = runBlocking {
+        context.dataStore.edit { it[KEY_BG_COLOR] = color }
+    }
+    fun getBackgroundColour(): Int = runBlocking {
+        context.dataStore.data.map { it[KEY_BG_COLOR] ?: android.graphics.Color.parseColor("#F5F5F5") }.first()
+    }
 
-    fun saveTextColour(color: Int) = prefs.edit().putInt(keyTextColour, color).apply()
-    fun getTextColour(): Int = prefs.getInt(keyTextColour, android.graphics.Color.BLACK)
+    fun saveButtonColour(color: Int) = runBlocking {
+        context.dataStore.edit { it[KEY_BTN_COLOR] = color }
+    }
+    fun getButtonColour(): Int = runBlocking {
+        context.dataStore.data.map { it[KEY_BTN_COLOR] ?: android.graphics.Color.parseColor("#6200EE") }.first()
+    }
 
+    fun saveTextColour(color: Int) = runBlocking {
+        context.dataStore.edit { it[KEY_TXT_COLOR] = color }
+    }
+    fun getTextColour(): Int = runBlocking {
+        context.dataStore.data.map { it[KEY_TXT_COLOR] ?: android.graphics.Color.BLACK }.first()
+    }
 
-    /**
-     * Saves the list of custom dice to local storage.
-     */
-    fun saveCustomDice(dice: MutableList<CustomDie?>) {
+    // --- Dice ---
+
+    fun saveCustomDice(dice: MutableList<CustomDie?>) = runBlocking {
         val json = gson.toJson(dice)
-        prefs.edit().putString(KEY_CUSTOM_DICE, json).apply()
+        context.dataStore.edit { it[KEY_CUSTOM_DICE] = json }
     }
 
-    /**
-     * Retrieves the list of custom dice from local storage.
-     * Returns an empty list if nothing is saved.
-     */
-    fun listCustomDice(): MutableList<CustomDie?> {
-        val json = prefs.getString(KEY_CUSTOM_DICE, null)
-        if (json == null || json.isEmpty()) return ArrayList<CustomDie?>()
-        val type = object : TypeToken<MutableList<CustomDie?>?>() {}.getType()
-        return gson.fromJson<MutableList<CustomDie?>>(json, type)
+    fun listCustomDice(): MutableList<CustomDie?> = runBlocking {
+        val json = context.dataStore.data.map { it[KEY_CUSTOM_DICE] }.first()
+        if (json.isNullOrEmpty()) return@runBlocking mutableListOf<CustomDie?>()
+        val type = object : TypeToken<MutableList<CustomDie?>>() {}.type
+        gson.fromJson(json, type)
     }
 
-    /**
-     * Saves custom rules (Modifiers) to local storage.
-     */
-    fun saveRules(rules: MutableList<Rule?>) {
+    // --- Rules ---
+
+    fun saveRules(rules: MutableList<Rule?>) = runBlocking {
         val json = gson.toJson(rules)
-        prefs.edit().putString(KEY_CUSTOM_RULES, json).apply()
+        context.dataStore.edit { it[KEY_CUSTOM_RULES] = json }
     }
 
-    /**
-     * Retrieves the list of custom rules from local storage.
-     */
-    fun listRules(): MutableList<Rule?> {
-        val json = prefs.getString(KEY_CUSTOM_RULES, null)
-        if (json == null || json.isEmpty()) return ArrayList<Rule?>()
-        val type = object : TypeToken<MutableList<Rule?>?>() {}.getType()
-        return gson.fromJson<MutableList<Rule?>>(json, type)
+    fun listRules(): MutableList<Rule?> = runBlocking {
+        val json = context.dataStore.data.map { it[KEY_CUSTOM_RULES] }.first()
+        if (json.isNullOrEmpty()) return@runBlocking mutableListOf<Rule?>()
+        val type = object : TypeToken<MutableList<Rule?>>() {}.type
+        gson.fromJson(json, type)
     }
 
-    /**
-     * Deletes a custom die by its ID.
-     */
     fun deleteCustomDie(id: String?) {
         val dice = listCustomDice()
         dice.removeAll { it?.id == id }
         saveCustomDice(dice)
     }
 
-    /**
-     * Deletes a rule by its ID.
-     */
     fun deleteRule(id: String?) {
         val rules = listRules()
         rules.removeAll { it?.id == id }
         saveRules(rules)
     }
 
-    /**
-     * Wipes all data in the store.
-     */
-    fun clearAll() {
-        prefs.edit().clear().apply()
+    fun clearAll() = runBlocking {
+        context.dataStore.edit { it.clear() }
     }
 
-    /**
-     * Saves the animation speed to local storage.
-     */
-    fun saveAnimSpeed(speed: Float) = prefs.edit().putFloat(keyAnimationSpeed, speed).apply()
+    // --- Settings ---
 
-    /**
-     * Returns 1.0f (Normal), 0.4f (Fast), or 0.0f (Instant) that determines the animation's speed
-     */
-    fun getAnimSpeed(): Float = prefs.getFloat(keyAnimationSpeed, 1.0f)
+    fun saveAnimSpeed(speed: Float) = runBlocking {
+        context.dataStore.edit { it[KEY_ANIM_SPEED] = speed }
+    }
+    fun getAnimSpeed(): Float = runBlocking {
+        context.dataStore.data.map { it[KEY_ANIM_SPEED] ?: 1.0f }.first()
+    }
 
-    /**
-     * Saves the roll history to local storage.
-     */
-    fun saveHistory(history: List<RollHistoryItem>) {
+    fun saveHistory(history: List<RollHistoryItem>) = runBlocking {
         val json = gson.toJson(history)
-        prefs.edit().putString(keyHistory, json).apply()
+        context.dataStore.edit { it[KEY_HISTORY] = json }
     }
 
-    /**
-     * Retrieves the roll history from local storage.
-     */
-    fun listHistory(): MutableList<RollHistoryItem> {
-        val json = prefs.getString(keyHistory, null)
-        if (json.isNullOrEmpty()) return mutableListOf()
+    fun listHistory(): MutableList<RollHistoryItem> = runBlocking {
+        val json = context.dataStore.data.map { it[KEY_HISTORY] }.first()
+        if (json.isNullOrEmpty()) return@runBlocking mutableListOf<RollHistoryItem>()
         val type = object : TypeToken<List<RollHistoryItem>>() {}.type
-        return gson.fromJson(json, type)
-    }
-
-    companion object {
-        private const val PREF_NAME = "dice_store"
-        private const val KEY_CUSTOM_DICE = "customDiceJson"
-        private const val KEY_CUSTOM_RULES = "customRulesJson"
+        gson.fromJson(json, type)
     }
 }
