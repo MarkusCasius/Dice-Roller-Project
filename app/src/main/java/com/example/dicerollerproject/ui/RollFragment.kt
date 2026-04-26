@@ -389,7 +389,7 @@ class RollFragment : Fragment() {
             diceContainer.tag = rollId
 
             val diceView = ImageView(requireContext())
-            diceView.setImageResource(R.drawable.ic_dice_rolling_placeholder)
+            diceView.setImageResource(R.drawable.dice_generic)
             val imgParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
