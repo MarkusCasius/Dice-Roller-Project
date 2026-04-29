@@ -4,7 +4,7 @@ Android application built with Kotlin for tabletop gamers and statisticians. Thi
 
 ## Key Features
 
-*   **Deterministic 3D Dice Tray:** Visual representation of rolls that matches the underlying engine results.
+*   **Deterministic 2D Dice Tray:** Visual representation of rolls that matches the underlying engine results.
 *   **Custom Die Factory:** Create dice with non-numeric faces (e.g., "Fire", "Ice", "Fail") for categorical rolling.
 *   **Rule Architect:** Bundle multiple dice types (standard and custom) with complex modifiers (Flat bonuses, Keep Highest/Lowest, Reroll ranges).
 *   **Statistical Simulator:** Run up to 10,000+ trials to view histograms and analyze outcome likelihoods.
